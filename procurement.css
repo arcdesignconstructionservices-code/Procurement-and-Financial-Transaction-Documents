@@ -69,5 +69,7 @@ html.previewing .print-root{display:block;position:fixed;inset:0;z-index:50;over
 .acl{display:flex;align-items:center;gap:8px;margin:2px 0;font-variant-numeric:tabular-nums}
 @media (max-width:640px){.acrow{grid-template-columns:1fr 34px}.acrow .combo{grid-column:1/-1}}
 
-.bkl{height:24px;width:72px;object-fit:contain;object-position:left center;vertical-align:middle}
+.bkl{height:24px;width:auto;max-width:100px;vertical-align:middle}
 .combo-opt .bkl{flex:none}
+.bkrow{display:grid;grid-template-columns:108px auto;align-items:center}
+.acl{display:grid;grid-template-columns:108px auto;align-items:center;min-height:30px}

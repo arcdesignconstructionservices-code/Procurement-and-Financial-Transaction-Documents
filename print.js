@@ -29,8 +29,8 @@ const SHEET_CSS = `
 .sheet .bank .r b{min-width:128px;color:#666;font-weight:700}
 .sheet .bank .r span{color:#222;font-weight:700}
 .sheet .bank .acs{display:flex;flex-direction:column;gap:5px}
-.sheet .bank .ac{display:flex;align-items:center;font-size:12.5px;font-weight:700;color:#222;letter-spacing:.3px}
-.sheet .bank .ac .bk{min-width:44px;text-align:center}
+.sheet .bank .ac{display:grid;grid-template-columns:108px auto;align-items:center;font-size:12.5px;font-weight:700;color:#222;letter-spacing:.3px;min-height:30px}
+.sheet .bank .ac .bk{justify-self:start;min-width:44px;text-align:center}
 .sheet .sig{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:34px;position:relative}
 .sheet .sig .lbl{font-size:13px}
 .sheet .sig .line{border-bottom:1px solid #444;min-height:26px;padding-top:6px;color:#222;font-size:12.5px;font-weight:700;text-transform:uppercase}
@@ -39,7 +39,7 @@ const SHEET_CSS = `
 .sheet .stamp small{display:block;font-size:12.5px;font-weight:700;letter-spacing:.3px;margin-top:3px}
 .sheet .sig .ttl{color:#666;font-size:11.5px;margin-top:3px}
 .bk{display:inline-block;color:#fff;font:800 10px/1 Arial,sans-serif;font-style:normal;padding:4px 6px;margin-right:7px;border-radius:3px;letter-spacing:.3px;vertical-align:1px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.bkl{height:26px;width:78px;object-fit:contain;object-position:left center;vertical-align:middle;margin-right:8px}
+.bkl{height:24px;width:auto;max-width:100px;display:block}
 .sheet .def{color:#0a0a0a}
 @media print{@page{size:A4;margin:0}.sheet{margin:0;box-shadow:none}}
 `;
