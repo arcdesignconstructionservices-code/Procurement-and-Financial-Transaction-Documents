@@ -3,7 +3,7 @@
    logo + company block top left, big blue title, magenta labels, grey striped rows,
    TOTAL / DEFICIT formulas, signature lines. Budget Request and Purchase Order use the same look.
    ============================================================ */
-const XL = { blue: 'FF283592', blue2: 'FF2A3990', pink: 'FFE01B84', grey: 'FF434343', text: 'FF666666', stripe: 'FFF3F3F3' };
+const XL = { blue: 'FF0A0A0A', blue2: 'FF0A0A0A', pink: 'FFFF8A00', grey: 'FF0A0A0A', text: 'FF666666', stripe: 'FFF4F2EE' };
 const XL_NUM = '#,##0.00;(#,##0.00)';
 const xlFont = (size, color, bold) => ({ name: 'Arial', size, bold: !!bold, color: { argb: color } });
 const xlDate = s => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || ''); return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null; };

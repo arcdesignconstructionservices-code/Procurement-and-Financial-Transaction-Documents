@@ -10,18 +10,20 @@ const SHEET_CSS = `
 .sheet .lh img{width:92px;height:auto;display:block}
 .sheet .lh b{display:block;font-size:15px;color:#111;margin-bottom:2px}
 .sheet .lh span{display:block;font-size:11.5px;color:#222;line-height:1.35}
-.sheet h1{margin:6px 0 14px;padding:0;border:0;text-transform:none;font-size:38px;line-height:1.05;color:#283592;font-weight:800;letter-spacing:-.5px}
-.sheet .lbl{font-weight:800;font-size:13px;color:#283592}
+.sheet h1{margin:6px 0 14px;padding:0;border:0;text-transform:none;font-size:38px;line-height:1.05;color:#0a0a0a;font-weight:800;letter-spacing:-.5px}
+.sheet .lbl{font-weight:800;font-size:13px;color:#0a0a0a}
 .sheet .val{color:#666;font-size:13px;min-height:19px;padding:2px 0 8px;word-break:break-word}
 .sheet .pair{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
 .sheet table{width:100%;border-collapse:collapse;margin-top:10px}
-.sheet h1::before,.sheet h1::after{display:none!important;content:none!important}
-.sheet th{background:none;text-transform:none;letter-spacing:0;color:#2a3990;font-weight:800;font-size:13px;text-align:left;padding:5px 7px;border-bottom:1px solid #c9ccd8}
+.sheet h1::before{display:none!important}
+.sheet h1::after{content:"";display:block!important;width:56px;height:4px;background:#ffa203;margin-top:9px}
+.sheet th{background:none;text-transform:none;letter-spacing:0;color:#0a0a0a;font-weight:800;font-size:13px;text-align:left;padding:5px 7px;border-bottom:2px solid #ffa203}
 .sheet th.n,.sheet td.n{text-align:right}
 .sheet td{padding:5px 7px;color:#666;font-size:12.5px;height:25px;vertical-align:top}
-.sheet tbody tr:nth-child(odd) td{background:#f3f3f3}
-.sheet .tot{display:flex;justify-content:flex-end;gap:26px;margin-top:12px;color:#e01b84;font-weight:800;font-size:19px}
-.sheet .tot.sm{font-size:15px;color:#283592;margin-top:4px}
+.sheet tbody tr:nth-child(odd) td{background:#f4f2ee}
+.sheet tbody tr:nth-child(even) td{background:#fff}
+.sheet .tot{display:flex;justify-content:flex-end;gap:26px;margin-top:12px;color:#ff8a00;font-weight:800;font-size:19px}
+.sheet .tot.sm{font-size:15px;color:#0a0a0a;margin-top:4px}
 .sheet .bank{margin-top:16px;color:#555}
 .sheet .bank .r{display:flex;gap:12px;font-size:12px;line-height:1.7}
 .sheet .bank .r b{min-width:128px;color:#666;font-weight:700}
@@ -33,7 +35,7 @@ const SHEET_CSS = `
 .sheet .stamp big{display:block;font-size:30px;letter-spacing:2px}
 .sheet .stamp small{display:block;font-size:12.5px;font-weight:700;letter-spacing:.3px;margin-top:3px}
 .sheet .sig .ttl{color:#666;font-size:11.5px;margin-top:3px}
-.sheet .def{color:#283592}
+.sheet .def{color:#0a0a0a}
 @media print{@page{size:A4;margin:0}.sheet{margin:0;box-shadow:none}}
 `;
 (function () { const st = document.createElement('style'); st.textContent = SHEET_CSS; document.head.appendChild(st); })();
