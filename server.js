@@ -123,7 +123,7 @@ app.post('/api/email', async (req, res) => {
 /* Real bank logos: any image dropped in the banks/ folder (bdo.png, bpi.png, metrobank.png ...) is used automatically. */
 app.get('/api/bank-logos', (req, res) => {
   let files = [];
-  try { files = require('fs').readdirSync(path.join(__dirname, 'banks')).filter(f => /\.(png|svg|jpe?g|webp)$/i.test(f)); } catch (e) { }
+  try { files = require('fs').readdirSync(path.join(__dirname, 'banks')).filter(f => /\.(png|svg|jpe?g|webp|avif)$/i.test(f)); } catch (e) { }
   res.json(files);
 });
 

@@ -39,7 +39,7 @@ const SHEET_CSS = `
 .sheet .stamp small{display:block;font-size:12.5px;font-weight:700;letter-spacing:.3px;margin-top:3px}
 .sheet .sig .ttl{color:#666;font-size:11.5px;margin-top:3px}
 .bk{display:inline-block;color:#fff;font:800 10px/1 Arial,sans-serif;font-style:normal;padding:4px 6px;margin-right:7px;border-radius:3px;letter-spacing:.3px;vertical-align:1px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.bkl{height:22px;width:auto;max-width:70px;object-fit:contain;vertical-align:middle;margin-right:8px}
+.bkl{height:22px;width:auto;max-width:96px;object-fit:contain;vertical-align:middle;margin-right:8px}
 .sheet .def{color:#0a0a0a}
 @media print{@page{size:A4;margin:0}.sheet{margin:0;box-shadow:none}}
 `;

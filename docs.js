@@ -134,7 +134,8 @@ function docSubject(kind, d) {
 async function emailDoc(kind, d, to) {
   const buf = await buildXlsx(kind, d);
   let bin = ''; new Uint8Array(buf).forEach(b => bin += String.fromCharCode(b));
-  const html = `<div style="font-family:Arial,sans-serif;max-width:640px">${sheetHtml(kind, d, true)}<p style="color:#777;font-size:12px">Sent from ARC+ Procurement. The Excel copy is attached.</p></div>`;
+  window.BK_MAIL = true; const sheet = sheetHtml(kind, d, true); window.BK_MAIL = false;
+  const html = `<div style="font-family:Arial,sans-serif;max-width:640px">${sheet}<p style="color:#777;font-size:12px">Sent from ARC+ Procurement. The Excel copy is attached.</p></div>`;
   const r = await fetch('/api/email', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ to, subject: docSubject(kind, d), html, filename: docFileName(kind, d) + '.xlsx', xlsx: btoa(bin) }) });
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || r.status);
 }
@@ -194,13 +195,41 @@ const BANK_ABBR = { Metrobank: 'MBTC', GoTyme: 'GT', Landbank: 'LBP', 'Security 
 const bankOf = name => BANKS.find(b => lc(b.n) === lc(name));
 const bankAbbr = n => { const w = String(n || '').trim().split(/\s+/); return (w.length > 1 ? w.map(x => x[0]).join('') : String(n || '').slice(0, 4)).toUpperCase().slice(0, 4); };
 const bankSlug = n => String(n || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-const BANK_LOGOS = {};   // slug -> file name, filled from /api/bank-logos
-fetch('/api/bank-logos', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).then(list => list.forEach(f => { BANK_LOGOS[f.replace(/\.[^.]+$/, '').toLowerCase()] = f; })).catch(() => { });
+const BANK_LOGOS = {}, BANK_TRIM = {};   // slug -> file name / cropped copy (data URL), filled from /api/bank-logos
+/* The logo files have empty margins; crop each one to its visible part so all logos print at a similar size. */
+function trimLogo(slug, url) {
+  const img = new Image();
+  img.onload = () => {
+    try {
+      const k = Math.min(1, 700 / Math.max(img.width, img.height)), w = Math.max(1, Math.round(img.width * k)), h = Math.max(1, Math.round(img.height * k));
+      const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0, w, h);
+      const px = x.getImageData(0, 0, w, h).data;
+      const at = (xx, yy) => { const o = (yy * w + xx) * 4; return [px[o], px[o + 1], px[o + 2], px[o + 3]]; };
+      const cs = [at(1, 1), at(w - 2, 1), at(1, h - 2), at(w - 2, h - 2)];
+      const clear = cs.filter(c => c[3] < 16).length >= 2;
+      const bg = clear ? [255, 255, 255] : [0, 1, 2].map(i => Math.round(cs.reduce((n, c) => n + c[i], 0) / 4));
+      const light = bg[0] > 225 && bg[1] > 225 && bg[2] > 225;
+      let x0 = w, y0 = h, x1 = -1, y1 = -1;
+      for (let y = 0; y < h; y++) for (let xx = 0; xx < w; xx++) {
+        const o = (y * w + xx) * 4; const al = px[o + 3] / 255;
+        const dd = Math.abs(px[o] * al + 255 * (1 - al) - bg[0]) + Math.abs(px[o + 1] * al + 255 * (1 - al) - bg[1]) + Math.abs(px[o + 2] * al + 255 * (1 - al) - bg[2]);
+        if (dd > 60) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+      }
+      if (x1 < 0) return;
+      const padX = Math.round(Math.max(2, (x1 - x0 + 1) * (light ? 0.02 : 0.16))), padY = Math.round(Math.max(2, (y1 - y0 + 1) * (light ? 0.02 : 0.32)));
+      x0 = Math.max(0, x0 - padX); y0 = Math.max(0, y0 - padY); x1 = Math.min(w - 1, x1 + padX); y1 = Math.min(h - 1, y1 + padY);
+      const o = document.createElement('canvas'); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1; o.getContext('2d').drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
+      BANK_TRIM[slug] = o.toDataURL('image/png');
+    } catch (e) { }
+  };
+  img.src = url;
+}
+fetch('/api/bank-logos', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).then(list => list.forEach(f => { const s = f.replace(/\.[^.]+$/, '').toLowerCase(); BANK_LOGOS[s] = f; trimLogo(s, '/banks/' + encodeURIComponent(f)); })).catch(() => { });
 function bankBadge(name) {
   if (!String(name || '').trim()) return '';
   const b = bankOf(name), c = b ? b.c : '#6f6a62', t = b ? (BANK_ABBR[b.n] || (b.n.length <= 5 ? b.n : bankAbbr(b.n))) : bankAbbr(name);
   const logo = b && BANK_LOGOS[bankSlug(b.n)];
-  if (logo) return `<img class="bkl" src="${location.origin}/banks/${encodeURIComponent(logo)}" alt="${esc(b.n)}">`;
+  if (logo) { const src = (!window.BK_MAIL && BANK_TRIM[bankSlug(b.n)]) || (location.origin + '/banks/' + encodeURIComponent(logo)); return `<img class="bkl" src="${src}" alt="${esc(b.n)}">`; }
   return `<i class="bk" style="background:${c}">${esc(t)}</i>`;
 }
 
