@@ -68,3 +68,6 @@ html.previewing .print-root{display:block;position:fixed;inset:0;z-index:50;over
 #eAccts .sm,#sAccts .sm{margin-top:2px}
 .acl{display:flex;align-items:center;gap:8px;margin:2px 0;font-variant-numeric:tabular-nums}
 @media (max-width:640px){.acrow{grid-template-columns:1fr 34px}.acrow .combo{grid-column:1/-1}}
+
+.bkl{height:20px;width:auto;max-width:64px;object-fit:contain;vertical-align:middle}
+.combo-opt .bkl{flex:none;min-width:34px}

@@ -120,6 +120,13 @@ app.post('/api/email', async (req, res) => {
   } catch (e) { res.status(502).json({ error: 'send_failed', message: e.message }); }
 });
 
+/* Real bank logos: any image dropped in the banks/ folder (bdo.png, bpi.png, metrobank.png ...) is used automatically. */
+app.get('/api/bank-logos', (req, res) => {
+  let files = [];
+  try { files = require('fs').readdirSync(path.join(__dirname, 'banks')).filter(f => /\.(png|svg|jpe?g|webp)$/i.test(f)); } catch (e) { }
+  res.json(files);
+});
+
 /* ---- Static app ---- */
 app.get('/vendor/exceljs.min.js', (req, res) => res.sendFile(path.join(__dirname, 'node_modules/exceljs/dist/exceljs.min.js')));
 const BLOCK = /^\/(server\.js|package(-lock)?\.json|node_modules|\.git)/;

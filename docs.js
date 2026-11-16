@@ -193,9 +193,14 @@ const BANKS = [
 const BANK_ABBR = { Metrobank: 'MBTC', GoTyme: 'GT', Landbank: 'LBP', 'Security Bank': 'SBC', UnionBank: 'UBP', 'China Bank': 'CBC', EastWest: 'EWB', Maybank: 'MBB', 'Robinsons Bank': 'RBI', 'Sterling Bank': 'STER', Citibank: 'CITI', UnionDigital: 'UD', 'Standard Chartered': 'SC' };
 const bankOf = name => BANKS.find(b => lc(b.n) === lc(name));
 const bankAbbr = n => { const w = String(n || '').trim().split(/\s+/); return (w.length > 1 ? w.map(x => x[0]).join('') : String(n || '').slice(0, 4)).toUpperCase().slice(0, 4); };
+const bankSlug = n => String(n || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const BANK_LOGOS = {};   // slug -> file name, filled from /api/bank-logos
+fetch('/api/bank-logos', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).then(list => list.forEach(f => { BANK_LOGOS[f.replace(/\.[^.]+$/, '').toLowerCase()] = f; })).catch(() => { });
 function bankBadge(name) {
   if (!String(name || '').trim()) return '';
   const b = bankOf(name), c = b ? b.c : '#6f6a62', t = b ? (BANK_ABBR[b.n] || (b.n.length <= 5 ? b.n : bankAbbr(b.n))) : bankAbbr(name);
+  const logo = b && BANK_LOGOS[bankSlug(b.n)];
+  if (logo) return `<img class="bkl" src="${location.origin}/banks/${encodeURIComponent(logo)}" alt="${esc(b.n)}">`;
   return `<i class="bk" style="background:${c}">${esc(t)}</i>`;
 }
 
