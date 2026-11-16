@@ -179,3 +179,21 @@ function applyScan(kind, W, d) {
   if (kind === 'lq') { if (items.length) W.rows = items.map(i => ({ id: uid(), date: /^\d{4}-/.test(i.date || '') ? i.date : W.date, desc: String(i.description || ''), amount: num(i.price) * (num(i.qty) || 1) })); if (!W.brId && num(d.budget)) W.budget = num(d.budget); }
   else if (items.length) W.items = items.map(i => ({ id: uid(), desc: String(i.description || ''), qty: num(i.qty) || 1, price: num(i.price) }));
 }
+
+/* ---------- banks (colored badge with the bank's short name; not the official logos) ---------- */
+const BANKS = [
+  ['BDO', '#0a4ba0'], ['BPI', '#b3161d'], ['Metrobank', '#0b2f6b'], ['GoTyme', '#0bb5c4'], ['Landbank', '#0a8a4a'], ['PNB', '#0c3b8f'],
+  ['Security Bank', '#1e9e55'], ['UnionBank', '#f37021'], ['RCBC', '#00539b'], ['China Bank', '#b8141c'], ['EastWest', '#6a1b9a'],
+  ['PSBank', '#0067b1'], ['Maybank', '#d4a400'], ['DBP', '#00693e'], ['CIMB', '#b0121a'], ['AUB', '#0f4c81'],
+  ['BOC', '#c8102e'], ['Robinsons Bank', '#d81f26'], ['Sterling Bank', '#00205b'], ['GCash', '#0a6cf0'], ['Maya', '#08a05b'],
+  ['SeaBank', '#e8501a'], ['UnionDigital', '#f58220'], ['Tonik', '#6c2bd9'], ['Citibank', '#0a3a82'], ['HSBC', '#c8102e'],
+  ['Standard Chartered', '#0a7a4b'], ['Other', '#6f6a62']
+].map(([n, c]) => ({ n, c }));
+const BANK_ABBR = { Metrobank: 'MBTC', GoTyme: 'GT', Landbank: 'LBP', 'Security Bank': 'SBC', UnionBank: 'UBP', 'China Bank': 'CBC', EastWest: 'EWB', Maybank: 'MBB', 'Robinsons Bank': 'RBI', 'Sterling Bank': 'STER', Citibank: 'CITI', UnionDigital: 'UD', 'Standard Chartered': 'SC' };
+const bankOf = name => BANKS.find(b => lc(b.n) === lc(name));
+const bankAbbr = n => { const w = String(n || '').trim().split(/\s+/); return (w.length > 1 ? w.map(x => x[0]).join('') : String(n || '').slice(0, 4)).toUpperCase().slice(0, 4); };
+function bankBadge(name) {
+  if (!String(name || '').trim()) return '';
+  const b = bankOf(name), c = b ? b.c : '#6f6a62', t = b ? (BANK_ABBR[b.n] || (b.n.length <= 5 ? b.n : bankAbbr(b.n))) : bankAbbr(name);
+  return `<i class="bk" style="background:${c}">${esc(t)}</i>`;
+}

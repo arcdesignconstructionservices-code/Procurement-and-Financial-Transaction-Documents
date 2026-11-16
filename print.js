@@ -35,6 +35,7 @@ const SHEET_CSS = `
 .sheet .stamp big{display:block;font-size:30px;letter-spacing:2px}
 .sheet .stamp small{display:block;font-size:12.5px;font-weight:700;letter-spacing:.3px;margin-top:3px}
 .sheet .sig .ttl{color:#666;font-size:11.5px;margin-top:3px}
+.bk{display:inline-block;color:#fff;font:800 10px/1 Arial,sans-serif;font-style:normal;padding:4px 6px;margin-right:7px;border-radius:3px;letter-spacing:.3px;vertical-align:1px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .sheet .def{color:#0a0a0a}
 @media print{@page{size:A4;margin:0}.sheet{margin:0;box-shadow:none}}
 `;
@@ -69,7 +70,7 @@ function sheetHtml(kind, d, forEmail) {
       <div class="pair"><div><div class="lbl">Project</div><div class="val">${esc(projName(d))}</div></div><div>${isPo ? `<div class="lbl">Payment To</div><div class="val">${esc(sup)}</div>` : `<div class="lbl">Requested By</div><div class="val">${esc(d.requestedBy)}</div>`}</div></div>
       <table><thead><tr><th style="width:9%">Item #</th><th>Description</th><th class="n" style="width:10%">Qty</th><th class="n" style="width:17%">Unit price</th><th class="n" style="width:17%">Total price</th></tr></thead><tbody>${rows}${padRows(items.length, 10, 5)}</tbody></table>
       <div class="tot"><span>TOTAL=</span><span>${fmt(total)}</span></div>
-      ${isPo ? `<div class="bank"><div class="r"><b>BANK DETAILS:</b><span>${esc(d.bank)}</span></div><div class="r"><b>ACCOUNT NAME:</b><span>${esc(d.accName)}</span></div><div class="r"><b>ACCOUNT NUMBER:</b><span>${esc(d.accNo)}</span></div></div>` : ''}
+      ${isPo ? `<div class="bank"><div class="r"><b>BANK DETAILS:</b><span>${bankBadge(d.bank)}${esc(d.bank)}</span></div><div class="r"><b>ACCOUNT NAME:</b><span>${esc(d.accName)}</span></div><div class="r"><b>ACCOUNT NUMBER:</b><span>${esc(d.accNo)}</span></div></div>` : ''}
       <div class="sig"><div><div class="lbl">Requested By:</div><div class="line">${esc(d.requestedBy)}</div></div><div><div class="lbl">Date</div><div class="line">${esc(fmtDate(d.date))}</div></div>
         ${!isPo && ['approved', 'liquidated'].includes(d.status) && d.approvedAt ? signRow('Approved By:', S.settings.approverName || d.approvedBy, S.settings.approverTitle || d.approvedTitle, d.approvedAt) : ''}
         ${isPo && d.status === 'released' ? signRow('Released By:', S.settings.releaserName || S.settings.approverName || d.releasedBy, S.settings.approverTitle || d.releasedTitle, d.releasedAt) : ''}

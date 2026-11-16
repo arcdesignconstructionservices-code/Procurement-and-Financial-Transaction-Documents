@@ -121,7 +121,7 @@ function editor(kind, orig, isNew) {
     ${kind !== 'br' ? `<div class="field"><label>${kind === 'po' ? 'For budget request' : 'Budget request'}</label><select id="fBr"${dis}>${brOpts}</select></div>` : ''}
     <div class="field"><label>Project</label><div class="combo"><input id="fPrj" autocomplete="off" placeholder="Select or type a project" value="${esc(projName(W))}"${dis}></div></div>
     ${kind === 'po' ? `<div class="field"><label>Payment to (supplier)</label><select id="fSup"${dis}>${supOpts}</select></div>
-      <div class="field"><label>Bank</label><input id="fBank" value="${esc(W.bank)}"${dis}></div><div class="field"><label>Account name</label><input id="fAccN" value="${esc(W.accName)}"${dis}></div><div class="field"><label>Account number</label><input id="fAccNo" value="${esc(W.accNo)}"${dis}></div>` : ''}
+      <div class="field"><label>Bank</label><div class="combo"><input id="fBank" autocomplete="off" placeholder="Select or type a bank" value="${esc(W.bank)}"${dis}></div></div><div class="field"><label>Account name</label><input id="fAccN" value="${esc(W.accName)}"${dis}></div><div class="field"><label>Account number</label><input id="fAccNo" value="${esc(W.accNo)}"${dis}></div>` : ''}
     ${kind !== 'lq' ? `<div class="field"><label>Requested by</label><div class="row" style="flex-wrap:nowrap;gap:6px"><div class="combo" style="flex:1;min-width:0"><input id="fReq" autocomplete="off" placeholder="Select or type a name" value="${esc(W.requestedBy)}"${dis}></div>${locked ? '' : '<button type="button" class="sm" id="addPerson" title="Add a person to the list">+ Add</button>'}</div></div>` : `<div class="field"><label>Submitted by</label><input id="fSubBy" value="${esc(W.submittedBy)}"${dis}></div><div class="field"><label>Submitted on</label><input type="date" id="fSubOn" value="${esc(W.submittedDate)}"${dis}></div>`}
     ${kind === 'lq' && !W.brId ? `<div class="field"><label>Budget (₱)</label><input type="number" step="0.01" id="fBudget" value="${esc(W.budget)}"${dis}></div>` : ''}
   </div>
@@ -156,7 +156,8 @@ function editor(kind, orig, isNew) {
   const bind = (sel, fn) => { const e = q(sel); if (e) e.oninput = e.onchange = () => fn(e.value, e); };
   bind('#fDate', v => { W.date = v; renum(); });
   bind('#fNo', v => { W.no = v; noEdited = true; });
-  if (!locked) { comboBind(q('#fPrj'), () => prjList.map(p => p.name)); if (q('#fReq')) comboBind(q('#fReq'), () => people); }
+  if (!locked) { comboBind(q('#fBank'), () => BANKS.map(b => b.n), bankOptHtml);
+    comboBind(q('#fPrj'), () => prjList.map(p => p.name)); if (q('#fReq')) comboBind(q('#fReq'), () => people); }
   const pj = q('#fPrj');
   if (pj) pj.onchange = () => {
     const name = pj.value.trim();
@@ -168,7 +169,7 @@ function editor(kind, orig, isNew) {
   bind('#fReq', v => W.requestedBy = v);
   const apb = q('#addPerson'); if (apb) apb.onclick = () => personDialog(null, p => { W.requestedBy = p.name; q('#fReq').value = p.name; people.push(p.name); });
   bind('#fSubBy', v => W.submittedBy = v); bind('#fSubOn', v => W.submittedDate = v);
-  bind('#fBank', v => W.bank = v); bind('#fAccN', v => W.accName = v); bind('#fAccNo', v => W.accNo = v);
+  bind('#fBank', v => { W.bank = v; }); bind('#fAccN', v => W.accName = v); bind('#fAccNo', v => W.accNo = v);
   bind('#fBudget', v => { W.budget = num(v); totals(); });
   bind('#fSup', v => { const s = supplierOf(v); W.supplierId = v; W.supplierName = s ? s.name : ''; if (s) { W.bank = s.bank || ''; W.accName = s.accName || ''; W.accNo = s.accNo || ''; q('#fBank').value = W.bank; q('#fAccN').value = W.accName; q('#fAccNo').value = W.accNo; } });
   bind('#fBr', v => {
@@ -223,13 +224,14 @@ function suppliersPage() {
     let rows = S.suppliers.slice().sort((a, b) => a.name.localeCompare(b.name)); const q = lc(L.q);
     if (q) rows = rows.filter(s => lc([s.name, s.bank, s.accName, s.accNo].join(' ')).includes(q));
     L.page = Math.min(L.page, Math.max(0, Math.ceil(rows.length / PAGE) - 1));
-    $('#sbody').innerHTML = uiSlice(rows, L.page, PAGE).map(s => `<tr><td><b>${esc(s.name)}</b></td><td>${esc(s.bank)}</td><td>${esc(s.accName)}</td><td>${esc(s.accNo)}</td><td>${s.active === false ? '<span class="pill off">inactive</span>' : '<span class="pill final">active</span>'}</td><td class="n"><button class="sm" data-e="${s.id}">Edit</button></td></tr>`).join('') || '<tr><td colspan="6" class="empty">No suppliers yet.</td></tr>';
+    $('#sbody').innerHTML = uiSlice(rows, L.page, PAGE).map(s => `<tr><td><b>${esc(s.name)}</b></td><td>${bankBadge(s.bank)} ${esc(s.bank)}</td><td>${esc(s.accName)}</td><td>${esc(s.accNo)}</td><td>${s.active === false ? '<span class="pill off">inactive</span>' : '<span class="pill final">active</span>'}</td><td class="n"><button class="sm" data-e="${s.id}">Edit</button></td></tr>`).join('') || '<tr><td colspan="6" class="empty">No suppliers yet.</td></tr>';
     $('#spager').innerHTML = uiPager({ total: rows.length, page: L.page, size: PAGE, key: 'sup' });
     $('#sbody').querySelectorAll('[data-e]').forEach(b => b.onclick = () => edit(byId(S.suppliers, b.dataset.e)));
   };
-  const edit = s => dialog(`<h3>${s ? 'Edit supplier' : 'Add supplier'}</h3>
+  const edit = s => { dialogBank(); return edit2(s); };
+  const edit2 = s => dialog(`<h3>${s ? 'Edit supplier' : 'Add supplier'}</h3>
     <div class="field"><label>Supplier name</label><input name="name" required value="${esc(s ? s.name : '')}"></div>
-    <div class="field"><label>Bank</label><input name="bank" value="${esc(s ? s.bank : '')}" placeholder="e.g. BDO"></div>
+    <div class="field"><label>Bank</label><div class="combo"><input name="bank" id="sBank" autocomplete="off" value="${esc(s ? s.bank : '')}" placeholder="Select or type a bank"></div></div>
     <div class="field"><label>Account name</label><input name="accName" value="${esc(s ? s.accName : '')}"></div>
     <div class="field"><label>Account number</label><input name="accNo" value="${esc(s ? s.accNo : '')}"></div>
     <label class="chk"><input type="checkbox" name="active" ${!s || s.active !== false ? 'checked' : ''}> Active</label>`,
@@ -359,7 +361,7 @@ function peoplePage() {
 }
 
 /* ---------- dropdown for text boxes (themed replacement for the browser's datalist) ---------- */
-function comboBind(inp, getOpts) {
+function comboBind(inp, getOpts, render) {
   if (!inp) return;
   const wrap = inp.parentElement, box = document.createElement('div');
   box.className = 'combo-list'; wrap.appendChild(box);
@@ -367,7 +369,7 @@ function comboBind(inp, getOpts) {
   const show = () => {
     const all = getOpts(), v = lc(inp.value), exact = all.some(o => lc(o) === v);
     const list = all.filter(o => exact || !v || lc(o).includes(v));
-    box.innerHTML = list.map(o => `<button type="button" class="combo-opt${lc(o) === v ? ' on' : ''}">${esc(o)}</button>`).join('');
+    box.innerHTML = list.map(o => `<button type="button" class="combo-opt${lc(o) === v ? ' on' : ''}" data-v="${esc(o)}">${render ? render(o) : esc(o)}</button>`).join('');
     box.classList.toggle('open', list.length > 0);
   };
   inp.addEventListener('focus', show); inp.addEventListener('click', show); inp.addEventListener('input', show);
@@ -375,7 +377,11 @@ function comboBind(inp, getOpts) {
   inp.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
   box.addEventListener('mousedown', e => {
     const b = e.target.closest('.combo-opt'); if (!b) return;
-    e.preventDefault(); inp.value = b.textContent;
+    e.preventDefault(); inp.value = b.dataset.v;
     inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); hide();
   });
 }
+
+const bankOptHtml = n => `<span class="bkrow">${bankBadge(n)}<span>${esc(n)}</span></span>`;
+
+function dialogBank() { setTimeout(() => { const i = document.getElementById('sBank'); if (i && !i.dataset.cb) { i.dataset.cb = 1; comboBind(i, () => BANKS.map(b => b.n), bankOptHtml); } }, 0); }
