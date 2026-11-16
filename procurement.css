@@ -1,0 +1,52 @@
+/* ARC+ Procurement — page-specific styling (on top of app.css / ui.css) */
+.pill.sub{background:#e7ebfb;color:#283592}
+.pill.bad{background:#fde6e6;color:#c42727}
+:root[data-theme=dark] .pill.sub{background:#161d3d;color:#9aa7f5}
+:root[data-theme=dark] .pill.bad{background:#341212;color:#ff8a8a}
+.lbar{margin-bottom:12px;gap:10px}
+.srch{position:relative;flex:1;min-width:220px;max-width:420px}
+.srch svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+.srch input{width:100%;padding-left:36px}
+tr.clk{cursor:pointer}
+tr.clk:hover td{background:var(--o-soft)}
+td.n,th.n{text-align:right}
+.neg{color:var(--bad);font-weight:800}
+.okv b{color:var(--ok)}
+.linkline a{color:var(--o3);font-weight:700;text-decoration:none}
+.lockbar{background:var(--o-soft);border-left:4px solid var(--o);padding:10px 14px;margin:0 0 14px;font-weight:600}
+.egrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:0 18px;margin-bottom:6px}
+table.ed td{padding:4px 6px}
+table.ed input{width:100%;padding:8px 9px}
+table.ed input.n{text-align:right}
+table.ed td.n{font-weight:700}
+button.x{border:0;background:transparent;font-size:20px;line-height:1;color:var(--muted);cursor:pointer;padding:4px 8px}
+button.x:hover{color:var(--bad)}
+.totals{display:flex;justify-content:flex-end;gap:34px;flex-wrap:wrap;margin-top:16px;padding-top:12px;border-top:2px solid var(--ink)}
+.totals div{display:flex;flex-direction:column;align-items:flex-end}
+.totals span{font-size:11px;font-weight:800;letter-spacing:.8px;color:var(--muted);text-transform:uppercase}
+.totals b{font-size:24px;font-weight:800}
+.totals em{font-style:normal;font-size:12px;color:var(--muted)}
+/* preview + print */
+.print-root{display:none}
+html.previewing .app,html.previewing #toasts{display:none!important}
+html.previewing .print-root{display:block;position:fixed;inset:0;z-index:50;overflow:auto;background:#6b6b6b}
+.pvbar{position:sticky;top:0;z-index:2;display:flex;gap:10px;align-items:center;padding:10px 18px;background:#0a0a0a;color:#fff}
+.pvpage{padding:18px 0 40px}
+.pvpage .sheet{box-shadow:0 10px 40px rgba(0,0,0,.4)}
+@media (max-width:860px){.pvpage{overflow:auto}}
+@media print{
+  html.previewing .print-root{position:static;background:#fff;overflow:visible}
+  .pvbar,.no-print{display:none!important}
+  .pvpage{padding:0}
+  .pvpage .sheet{box-shadow:none}
+  body::before,body::after{display:none!important}
+  body{background:#fff}
+}
+.hbs{margin-top:14px;display:flex;flex-direction:column;gap:9px}
+.hb{display:grid;grid-template-columns:minmax(72px,34%) minmax(40px,1fr) 110px;gap:10px;align-items:center;font-size:13px}
+.hb .hl{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hb .hbar{height:14px;background:var(--soft);position:relative;overflow:hidden}
+.hb .hbar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,var(--o3),var(--o),var(--o2));transform-origin:left;animation:hgrow .8s cubic-bezier(.2,.9,.3,1.1) both}
+.hb .hv{text-align:right;font-weight:800;font-variant-numeric:tabular-nums}
+.hb .hv small{color:var(--muted);font-weight:600;margin-left:3px}
+@keyframes hgrow{from{transform:scaleX(0)}}

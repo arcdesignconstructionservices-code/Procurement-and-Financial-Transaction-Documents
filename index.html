@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ARC+ Procurement</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#ffa203">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ARC+ Procurement">
+<script src="/vendor/exceljs.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="ui.css">
+<link rel="stylesheet" href="procurement.css">
+<link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+<div class="scrim no-print" id="scrim"></div>
+<div class="app">
+  <aside class="no-print">
+    <div class="logo"><img class="logo-img" id="logoImg" src="logo.png" alt="ARC"><div class="logo-txt"><b>ARC<span>+</span></b><small id="coName">Procurement</small></div></div>
+    <nav id="nav">
+      <div class="navlbl">Overview</div>
+      <a href="#dashboard" data-r="dashboard" data-label="Dashboard"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg><span>Dashboard</span></a>
+      <div class="navlbl">Documents</div>
+      <a href="#budget" data-r="budget" data-label="Budget Requests"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/></svg><span>Budget Requests</span></a>
+      <a href="#orders" data-r="orders" data-label="Purchase Orders"><svg viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></svg><span>Purchase Orders</span></a>
+      <a href="#liquidations" data-r="liquidations" data-label="Liquidations"><svg viewBox="0 0 24 24"><path d="M7 3h10v18l-2.5-1.5L12 21l-2.5-1.5L7 21z"/><path d="M10 8h4M10 12h4"/></svg><span>Liquidations</span></a>
+      <div class="navlbl">Records</div>
+      <a href="#suppliers" data-r="suppliers" data-label="Suppliers"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg><span>Suppliers</span></a>
+      <a href="#projects" data-r="projects" data-label="Projects"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Projects</span></a>
+      <a href="#activity" data-r="activity" data-label="Activity Log"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 8v4l3 2"/></svg><span>Activity Log</span></a>
+      <div class="navlbl">System</div>
+      <a href="#settings" data-r="settings" data-label="Settings & Backup"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span>Settings & Backup</span></a>
+    </nav>
+    <button class="verbtn" id="verBtn" type="button" aria-label="Version and what's new"></button>
+    <button class="signout" id="signOut" data-label="Sign out"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg><span>Sign out</span></button>
+  </aside>
+  <div class="content">
+    <header class="topbar no-print">
+      <button class="burger" id="burger" title="Collapse / expand sidebar ( [ )" aria-label="Toggle sidebar"><span></span><span></span><span></span></button>
+      <div class="crumb">ARC+ Procurement <span class="sep">/</span> <b id="crumb">Dashboard</b></div>
+      <span class="spacer"></span>
+      <div class="clock"><i></i><span id="clock"></span></div>
+      <button class="iconbtn" id="refreshBtn" title="Refresh data"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8"/><path d="M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.3L3 16"/><path d="M3 21v-5h5"/></svg></button>
+      <div class="bell-wrap" id="bellWrap">
+        <button class="iconbtn" id="bellBtn" title="Notifications"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></button>
+        <span class="badge" id="bellBadge" style="display:none">0</span>
+        <div class="notif" id="notif">
+          <div class="nh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg>Notifications<span class="cnt" id="notifCnt">0</span></div>
+          <div class="nlist" id="notifList"></div>
+        </div>
+      </div>
+      <button class="iconbtn" id="themeBtn" title="Switch light / dark"><svg viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      <div class="profile" id="profile" title="Profile">
+        <div class="avatar"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><span class="syncdot" id="syncDot" data-state="local"></span></div>
+        <div class="pmeta"><b>Temporary Profile</b><small>Local session</small></div>
+      </div>
+    </header>
+    <main id="view"></main>
+  </div>
+</div>
+<div id="printRoot" class="print-root"></div>
+
+<dialog id="dlg"><form method="dialog" id="dlgForm"></form></dialog>
+<dialog id="confirmDlg" class="confirm"></dialog>
+
+<script src="ui.js"></script>
+<script src="sync.js"></script>
+<script src="version.js"></script>
+<script src="docs.js"></script>
+<script src="print.js"></script>
+<script src="excel.js"></script>
+<script src="pages.js"></script>
+<script src="access-notify.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

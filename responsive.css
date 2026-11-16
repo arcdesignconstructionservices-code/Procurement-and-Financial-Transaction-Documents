@@ -1,0 +1,161 @@
+/* ============================================================
+   RESPONSIVE — tablets and phones (320px and up)
+   Desktop layout is untouched; everything here is inside media queries.
+   ============================================================ */
+:root{--tbh:60px}
+.scrim{display:none}
+
+/* ---------- ≤ 860px : drawer navigation, compact top bar ---------- */
+@media (max-width:860px){
+  .app{grid-template-columns:1fr!important}
+  .scrim{display:block;position:fixed;inset:0;z-index:65;background:rgba(0,0,0,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .25s}
+  html.navopen .scrim{opacity:1;pointer-events:auto}
+
+  aside{position:fixed;left:0;top:0;bottom:0;height:100vh;height:100dvh;width:min(288px,86vw);z-index:70;overflow-y:auto;
+    padding:22px 16px calc(22px + env(safe-area-inset-bottom));transform:translateX(-104%);transition:transform .3s cubic-bezier(.4,.01,.2,1)}
+  html.navopen aside{transform:none;box-shadow:24px 0 60px -10px rgba(0,0,0,.65)}
+  /* the desktop "icons only" collapse never applies to the drawer */
+  html.collapsed aside{padding:22px 16px calc(22px + env(safe-area-inset-bottom))}
+  html.collapsed .logo{padding:2px 6px 24px;justify-content:flex-start}
+  html.collapsed .logo-txt,html.collapsed .navlbl,html.collapsed .side-foot,html.collapsed nav a span,html.collapsed .signout span{opacity:1;width:auto;overflow:visible;pointer-events:auto;position:static}
+  html.collapsed nav{margin-top:0}
+  html.collapsed nav a,html.collapsed .signout{justify-content:flex-start;padding:13px 14px}
+  html.collapsed nav a:hover::after,html.collapsed .signout:hover::after{content:none}
+  nav a{padding:13px 14px;font-size:15px}
+  .navlbl,.side-foot{display:block}
+  .burger{display:grid}
+
+  .topbar{padding:8px max(12px,env(safe-area-inset-right)) 8px max(12px,env(safe-area-inset-left));gap:6px;min-height:var(--tbh)}
+  .crumb{font-size:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .crumb b{font-size:17px;letter-spacing:-.3px}
+  .clock{display:none}
+  .topbar .spacer{display:none}
+  .profile{margin-left:0;padding:0 0 0 6px;border-left:0}
+  .notif{position:fixed;left:12px;right:12px;top:calc(var(--tbh) + 4px);width:auto}
+
+  main{padding:20px max(16px,env(safe-area-inset-left)) calc(48px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-right))}
+  h1{font-size:25px}
+  .sub{font-size:14px;margin-bottom:18px}
+  .grid2{grid-template-columns:1fr}
+  .card{padding:18px}
+
+  /* inputs ≥16px so iOS does not zoom in on focus */
+  input,select,textarea{font-size:16px}
+  .inv-tbl td input,.inv-tbl td select{font-size:16px}
+
+  /* dialogs fit the screen and scroll inside */
+  dialog{width:min(560px,94vw);max-height:92vh;max-height:92dvh;overflow-y:auto}
+  dialog form{padding:0 18px 18px}
+  dialog h3{margin:0 -18px 16px;padding:16px 18px}
+  dialog.wide{width:94vw}
+
+  .inv-sticky{top:var(--tbh)}
+  #toasts{bottom:calc(12px + env(safe-area-inset-bottom))}
+}
+
+/* ---------- ≤ 640px : phones — tables become cards ---------- */
+@media (max-width:640px){
+  .kpis{grid-template-columns:1fr 1fr;gap:10px}
+  .kpi.hero{grid-column:1/-1}
+  .kpi .v{font-size:23px}.kpi.hero .v{font-size:30px}
+  .kpi .l{font-size:10px}
+  .row{gap:8px}
+  .card .row>select,.card .row>input:not([type=checkbox]){flex:1 1 100%;min-width:0!important}
+  .row .spacer{display:none}
+  .row>button,.row>.btn{flex:1 1 auto;justify-content:center}
+
+  .tbl-wrap{margin:0;padding:0;overflow-x:visible}
+  table.rt{display:block;width:100%;min-width:0!important;font-size:14px}
+  table.rt thead{display:none}
+  table.rt tbody,table.rt tfoot{display:block}
+  table.rt tr{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;padding:13px 14px;margin-bottom:10px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--o)}
+  table.rt td{display:block;padding:0!important;border:0;white-space:normal;text-align:left!important;min-width:0;background:none!important}
+  table.rt td::before{content:attr(data-l);display:block;margin-bottom:3px;font-size:10px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted)}
+  table.rt td[data-l=""]::before{display:none}
+  table.rt td:empty{display:none}
+  table.rt td:first-child{grid-column:1/-1;font-size:15.5px}
+  table.rt td:first-child::before{display:none}
+  .inv-tbl td:first-child::before{display:block}
+  table.rt td.empty,table.rt td[colspan]{grid-column:1/-1;text-align:center!important}
+  table.rt td.empty::before,table.rt td[colspan]::before{display:none}
+  table.rt td:last-child:has(button){grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  table.rt td:last-child:has(button)::before{display:none}
+  table.rt td input,table.rt td select{width:100%!important;min-width:0!important;max-width:none!important}
+  table.rt tfoot tr{background:#0a0a0a;color:#fff;border-color:#0a0a0a;border-left-color:var(--o)}
+  table.rt tfoot td{color:#fff}
+  table.rt tfoot td::before{color:#a8a299}
+  table.rt tbody tr:hover td{background:none}
+  .inv-tbl td.acts{justify-content:flex-start}
+  .inv-tbl tr.isout{border-left-color:var(--o3)}
+  .pager{justify-content:center}.pager>span{width:100%;text-align:center;margin:4px 0 0!important}
+
+  /* inventory */
+  .inv-head{flex-direction:column;align-items:stretch}
+  .inv-head>div{width:100%}
+  .inv-head>button{flex:1 1 calc(50% - 4px)}
+  .inv-head .inv-scanbtn{flex:1 1 100%;order:-1;padding:14px;font-size:16px}
+  .inv-tabs-row{flex-wrap:nowrap;overflow-x:auto;margin-bottom:12px;padding-bottom:4px;-webkit-overflow-scrolling:touch}
+  .inv-tabs{flex-wrap:nowrap}.inv-tab,.inv-tabs-row .sm{flex:none}
+  .inv-search input{font-size:16px;padding:13px 6px}.inv-search kbd{display:none}
+  .inv-hits{padding-right:10px;font-size:11.5px}
+  .inv-fbar{gap:8px}
+  .fchips{flex-wrap:nowrap;overflow-x:auto;width:100%;padding-bottom:3px}.fchip{flex:none}
+  .seg{flex:1}.seg button{flex:1;justify-content:center;padding:8px 6px}
+  .inv-split{grid-template-columns:1fr}
+  .hb{grid-template-columns:minmax(70px,38%) 1fr 40px}
+  .inv-sh{flex-wrap:wrap}
+  .inv-sh>b{flex:1 1 60%}.inv-desc{display:none}
+  .inv-sh>.sm{flex:1 1 auto;justify-content:center}
+  .inv-gh{margin-top:20px}
+  .ic-head{padding:14px 16px}.ic-body{padding:16px}.ic-foot{padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+  .stepper>button{width:48px;height:48px}
+
+  /* payroll / forms */
+  #wkSel{min-width:0!important;width:100%}
+  .chips.scroll{max-height:240px}
+  .chip span{padding:10px 13px}
+  .connpill{font-size:11px}
+  .prof-prev{width:64px;height:64px}
+
+
+  /* scan overlay */
+  .scan-ov{padding:12px}
+  .scan-stage{padding:16px 16px 6px}
+  .scan-head,.scan-out{padding-left:16px;padding-right:16px}
+  .scan-meter{margin:14px 16px 0}.scan-counts{padding:10px 16px 14px;gap:14px;flex-wrap:wrap}
+  .lv-bar{padding:10px 14px}.lv-sheet{margin:12px 0;padding:6px}
+}
+
+/* ---------- ≤ 380px : very small phones ---------- */
+@media (max-width:380px){
+  main{padding-left:12px;padding-right:12px}
+  h1{font-size:22px}
+  .card{padding:14px}
+  table.rt tr{padding:12px}
+  .topbar{gap:2px}.iconbtn{width:34px;height:34px}.burger{width:36px}
+  dialog{width:96vw}
+  .chip span{padding:9px 11px;font-size:12.5px}
+}
+
+/* ---------- ≤ 340px : the smallest phones (320px) ---------- */
+@media (max-width:340px){
+  .kpis{grid-template-columns:1fr}
+  table.rt:not(.inv-tbl) tr{grid-template-columns:1fr}
+  .inv-head>button{flex:1 1 100%}
+  .iconbtn{width:32px}
+}
+
+/* ---------- touch devices : comfortable tap targets ---------- */
+@media (pointer:coarse){
+  button,.btn{min-height:40px}
+  button.sm{min-height:36px}
+  .iconbtn,.burger{min-width:40px;min-height:40px}
+  .chip span{min-height:40px}
+}
+
+/* ---------- landscape phones : keep header short ---------- */
+@media (max-height:480px) and (max-width:960px){
+  :root{--tbh:52px}
+  .inv-sticky{position:static}
+  aside{padding-top:12px}
+}
