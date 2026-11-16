@@ -29,7 +29,7 @@ let S; // state
 
 /* ---------- Storage ---------- */
 function seed() {
-  return { settings: { company: 'ARC', profileName: '', avatar: '', approverTitle: 'Vice President/CFO', approverName: '', releaserName: '', notifyEmails: '', autoEmail: false, autoDrafts: true, lqDays: 14 },
+  return { settings: { company: 'ARC', profileName: '', avatar: '', approverTitle: 'Vice President/CFO', approverName: 'Ar. Remz Jenica Capale', releaserName: '', notifyEmails: '', autoEmail: false, autoDrafts: true, lqDays: 14 },
     people: [], projects: [], suppliers: [], brs: [], pos: [], lqs: [], activity: [] };
 }
 function normalize() {
@@ -37,6 +37,7 @@ function normalize() {
   const d = seed(); S.settings = Object.assign(d.settings, S.settings || {});
   if (!S.settings.peopleSeeded) { S.settings.peopleSeeded = true; if (!S.people || !S.people.length) S.people = ['Remz Jenica Capale', 'Zyrine Capale'].map((name, i) => ({ id: 'seed-person-' + i, name, active: true })); }
   ['people', 'projects', 'suppliers', 'brs', 'pos', 'lqs', 'activity'].forEach(k => { if (!Array.isArray(S[k])) S[k] = []; });
+  if (!S.settings.approverSeeded) { S.settings.approverSeeded = true; if (!S.settings.approverName) S.settings.approverName = 'Ar. Remz Jenica Capale'; if (!S.settings.approverTitle) S.settings.approverTitle = 'Vice President/CFO'; }
   if (!S.settings.arjaySeeded) { S.settings.arjaySeeded = true; if (!S.people.some(p => /arjay ralph casanova/i.test(p.name))) S.people.push({ id: 'seed-person-2', name: 'Arjay Ralph Casanova', active: true }); }
 }
 function load() { try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) { S = null; } normalize(); }
