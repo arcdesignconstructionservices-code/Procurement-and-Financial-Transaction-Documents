@@ -112,9 +112,16 @@ async function buildXlsx(kind, d) {
   cell('E' + r, 'Date', { font: xlFont(12, XL.blue, true) }); merge(`E${r}:F${r}`);
   cell('B' + (r + 1), d.requestedBy, { font: xlFont(12, 'FF222222', true), border: bottom }); merge(`B${r + 1}:C${r + 1}`);
   cell('E' + (r + 1), xlDate(d.date), { font: xlFont(12, 'FF222222', true), fmt: 'M/d/yyyy', border: bottom, al: { horizontal: 'left' } }); merge(`E${r + 1}:F${r + 1}`);
-  const stampTxt = !isPo ? (d.approvedAt && ['approved', 'liquidated'].includes(d.status) ? `APPROVED  ${fmtDate(d.approvedAt)}  ${d.approvedBy || ''} ${d.approvedTitle ? '(' + d.approvedTitle + ')' : ''}` : '')
-    : (d.status === 'released' ? `RELEASED  ${fmtDate(d.releasedAt)}  ${d.releasedBy || ''}` : '');
-  if (stampTxt) { cell('B' + (r + 3), stampTxt.replace(/\s+/g, ' ').trim(), { font: xlFont(13, 'FFD62828', true) }); merge(`B${r + 3}:F${r + 3}`); }
+  const signed = !isPo ? (d.approvedAt && ['approved', 'liquidated'].includes(d.status) ? ['Approved By:', S.settings.approverName || d.approvedBy, S.settings.approverTitle || d.approvedTitle, d.approvedAt] : null)
+    : (d.status === 'released' ? ['Released By:', S.settings.releaserName || S.settings.approverName || d.releasedBy, S.settings.approverTitle || d.releasedTitle, d.releasedAt] : null);
+  if (signed) {
+    const sr = r + 3;
+    cell('B' + sr, signed[0], { font: xlFont(12, XL.blue, true) }); merge(`B${sr}:C${sr}`);
+    cell('E' + sr, 'Date', { font: xlFont(12, XL.blue, true) }); merge(`E${sr}:F${sr}`);
+    cell('B' + (sr + 1), signed[1] || '', { font: xlFont(12, 'FF222222', true), border: bottom }); merge(`B${sr + 1}:C${sr + 1}`);
+    cell('E' + (sr + 1), xlDate(signed[3]), { font: xlFont(12, 'FF222222', true), fmt: 'M/d/yyyy', border: bottom, al: { horizontal: 'left' } }); merge(`E${sr + 1}:F${sr + 1}`);
+    cell('B' + (sr + 2), signed[2] || '', { font: xlFont(10, XL.text) }); merge(`B${sr + 2}:C${sr + 2}`);
+  }
   return wb.xlsx.writeBuffer();
 }
 async function exportXlsx(kind, d) {

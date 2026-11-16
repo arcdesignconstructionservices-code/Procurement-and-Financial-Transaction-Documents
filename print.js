@@ -26,12 +26,13 @@ const SHEET_CSS = `
 .sheet .bank .r{display:flex;gap:12px;font-size:12px;line-height:1.7}
 .sheet .bank .r b{min-width:128px;color:#666;font-weight:700}
 .sheet .bank .r span{color:#222;font-weight:700}
-.sheet .sig{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:58px;position:relative}
+.sheet .sig{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:34px;position:relative}
 .sheet .sig .lbl{font-size:13px}
 .sheet .sig .line{border-bottom:1px solid #444;min-height:26px;padding-top:6px;color:#222;font-size:12.5px;font-weight:700;text-transform:uppercase}
 .sheet .stamp{position:absolute;right:2mm;top:-6px;transform:rotate(-7deg);border:3px double #d62828;color:#d62828;padding:5px 14px 6px;text-align:center;font-weight:900;opacity:.88;line-height:1.1;background:rgba(255,255,255,.35)}
 .sheet .stamp big{display:block;font-size:30px;letter-spacing:2px}
 .sheet .stamp small{display:block;font-size:12.5px;font-weight:700;letter-spacing:.3px;margin-top:3px}
+.sheet .sig .ttl{color:#666;font-size:11.5px;margin-top:3px}
 .sheet .def{color:#283592}
 @media print{@page{size:A4;margin:0}.sheet{margin:0;box-shadow:none}}
 `;
@@ -39,6 +40,8 @@ const SHEET_CSS = `
 
 const LETTERHEAD = () => `<div class="lh"><img src="${location.origin}/logo_dark.png" alt="ARC+"><div><b>${esc(COMPANY.name)}</b><span>${esc(COMPANY.address)}</span><span>${esc(COMPANY.email)}</span><span>${esc(COMPANY.phone)}</span></div></div>`;
 const padRows = (n, min, cols) => Array.from({ length: Math.max(0, min - n) }, () => `<tr>${'<td></td>'.repeat(cols)}</tr>`).join('');
+
+const signRow = (label, name, title, date) => `<div><div class="lbl">${label}</div><div class="line">${esc(name || '')}</div><div class="ttl">${esc(title || '')}</div></div><div><div class="lbl">Date</div><div class="line">${esc(fmtDate(date))}</div></div>`;
 
 function sheetHtml(kind, d, forEmail) {
   const css = forEmail ? `<style>${SHEET_CSS}</style>` : '';
@@ -66,8 +69,8 @@ function sheetHtml(kind, d, forEmail) {
       <div class="tot"><span>TOTAL=</span><span>${fmt(total)}</span></div>
       ${isPo ? `<div class="bank"><div class="r"><b>BANK DETAILS:</b><span>${esc(d.bank)}</span></div><div class="r"><b>ACCOUNT NAME:</b><span>${esc(d.accName)}</span></div><div class="r"><b>ACCOUNT NUMBER:</b><span>${esc(d.accNo)}</span></div></div>` : ''}
       <div class="sig"><div><div class="lbl">Requested By:</div><div class="line">${esc(d.requestedBy)}</div></div><div><div class="lbl">Date</div><div class="line">${esc(fmtDate(d.date))}</div></div>
-        ${!isPo && d.status !== 'draft' && d.status !== 'submitted' && d.status !== 'rejected' && d.approvedAt ? `<div class="stamp"><big>APPROVED</big><small>${esc(S.settings.approverName || d.approvedBy || '')}${(S.settings.approverTitle || d.approvedTitle) ? '<br>' + esc(S.settings.approverTitle || d.approvedTitle) : ''}<br>${esc(fmtDate(d.approvedAt))}</small></div>` : ''}
-        ${isPo && d.status === 'released' ? `<div class="stamp"><big>RELEASED</big><small>${esc(S.settings.releaserName || S.settings.approverName || d.releasedBy || '')}${(S.settings.approverTitle || d.releasedTitle) ? '<br>' + esc(S.settings.approverTitle || d.releasedTitle) : ''}<br>DATE: ${esc(fmtDate(d.releasedAt))}</small></div>` : ''}
+        ${!isPo && ['approved', 'liquidated'].includes(d.status) && d.approvedAt ? signRow('Approved By:', S.settings.approverName || d.approvedBy, S.settings.approverTitle || d.approvedTitle, d.approvedAt) : ''}
+        ${isPo && d.status === 'released' ? signRow('Released By:', S.settings.releaserName || S.settings.approverName || d.releasedBy, S.settings.approverTitle || d.releasedTitle, d.releasedAt) : ''}
       </div>`;
   }
   return `${css}<div class="sheet">${LETTERHEAD()}${body}</div>`;
