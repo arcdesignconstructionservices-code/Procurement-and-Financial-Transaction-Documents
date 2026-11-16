@@ -103,9 +103,13 @@ async function buildXlsx(kind, d) {
   cell('F' + tr, { formula: `SUM(F${first}:F${last})`, result: itemsTotal(items) }, { font: xlFont(14, XL.pink, true), fmt: XL_NUM, border: top });
   let r = tr + 2;
   if (isPo) {
-    [['BANK DETAILS:', d.bank], ['ACCOUNT NAME:', d.accName], ['ACCOUNT NUMBER:', d.accNo]].forEach(([l, v]) => {
-      cell('B' + r, l, { font: xlFont(11, XL.text, true) }); merge(`B${r}:C${r}`); cell('D' + r, String(v || ''), { font: xlFont(11, 'FF222222', true) }); merge(`D${r}:F${r}`); r++;
-    });
+    const nm = d.accName || d.supplierName || (supplierOf(d.supplierId) || {}).name || '';
+    const put = (l, v, bold) => { cell('B' + r, l, { font: xlFont(11, XL.text, true) }); merge('B' + r + ':C' + r); cell('D' + r, v, { font: xlFont(11, 'FF222222', true) }); merge('D' + r + ':F' + r); r++; };
+    put('BANK DETAILS:', '');
+    put('ACCOUNT NAME:', nm);
+    const ac = acctsOf(d);
+    if (!ac.length) put('ACCOUNT NUMBER:', '');
+    ac.forEach((a, k) => put(k ? '' : 'ACCOUNT NUMBER:', (a.bank ? a.bank + '   ' : '') + a.accNo));
     r++;
   }
   cell('B' + r, 'Requested By:', { font: xlFont(12, XL.blue, true) }); merge(`B${r}:C${r}`);

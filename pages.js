@@ -121,7 +121,8 @@ function editor(kind, orig, isNew) {
     ${kind !== 'br' ? `<div class="field"><label>${kind === 'po' ? 'For budget request' : 'Budget request'}</label><select id="fBr"${dis}>${brOpts}</select></div>` : ''}
     <div class="field"><label>Project</label><div class="combo"><input id="fPrj" autocomplete="off" placeholder="Select or type a project" value="${esc(projName(W))}"${dis}></div></div>
     ${kind === 'po' ? `<div class="field"><label>Payment to (supplier)</label><select id="fSup"${dis}>${supOpts}</select></div>
-      <div class="field"><label>Bank</label><div class="combo"><input id="fBank" autocomplete="off" placeholder="Select or type a bank" value="${esc(W.bank)}"${dis}></div></div><div class="field"><label>Account name</label><input id="fAccN" value="${esc(W.accName)}"${dis}></div><div class="field"><label>Account number</label><input id="fAccNo" value="${esc(W.accNo)}"${dis}></div>` : ''}
+      <div class="field"><label>Account name</label><input id="fAccN" value="${esc(W.accName)}"${dis}></div>
+      <div class="field" style="grid-column:1/-1"><label>Bank accounts</label><div id="eAccts"></div></div>` : ''}
     ${kind !== 'lq' ? `<div class="field"><label>Requested by</label><div class="row" style="flex-wrap:nowrap;gap:6px"><div class="combo" style="flex:1;min-width:0"><input id="fReq" autocomplete="off" placeholder="Select or type a name" value="${esc(W.requestedBy)}"${dis}></div>${locked ? '' : '<button type="button" class="sm" id="addPerson" title="Add a person to the list">+ Add</button>'}</div></div>` : `<div class="field"><label>Submitted by</label><input id="fSubBy" value="${esc(W.submittedBy)}"${dis}></div><div class="field"><label>Submitted on</label><input type="date" id="fSubOn" value="${esc(W.submittedDate)}"${dis}></div>`}
     ${kind === 'lq' && !W.brId ? `<div class="field"><label>Budget (₱)</label><input type="number" step="0.01" id="fBudget" value="${esc(W.budget)}"${dis}></div>` : ''}
   </div>
@@ -156,8 +157,8 @@ function editor(kind, orig, isNew) {
   const bind = (sel, fn) => { const e = q(sel); if (e) e.oninput = e.onchange = () => fn(e.value, e); };
   bind('#fDate', v => { W.date = v; renum(); });
   bind('#fNo', v => { W.no = v; noEdited = true; });
-  if (!locked) { comboBind(q('#fBank'), () => BANKS.map(b => b.n), bankOptHtml);
-    comboBind(q('#fPrj'), () => prjList.map(p => p.name)); if (q('#fReq')) comboBind(q('#fReq'), () => people); }
+  if (kind === 'po') { if (!Array.isArray(W.accounts) || !W.accounts.length) W.accounts = acctsOf(W).length ? clone(acctsOf(W)).map(a => ({ id: uid(), bank: a.bank, accNo: a.accNo })) : [{ id: uid(), bank: '', accNo: '' }]; acctEditor(q('#eAccts'), W.accounts, locked); }
+  if (!locked) { comboBind(q('#fPrj'), () => prjList.map(p => p.name)); if (q('#fReq')) comboBind(q('#fReq'), () => people); }
   const pj = q('#fPrj');
   if (pj) pj.onchange = () => {
     const name = pj.value.trim();
@@ -169,9 +170,9 @@ function editor(kind, orig, isNew) {
   bind('#fReq', v => W.requestedBy = v);
   const apb = q('#addPerson'); if (apb) apb.onclick = () => personDialog(null, p => { W.requestedBy = p.name; q('#fReq').value = p.name; people.push(p.name); });
   bind('#fSubBy', v => W.submittedBy = v); bind('#fSubOn', v => W.submittedDate = v);
-  bind('#fBank', v => { W.bank = v; }); bind('#fAccN', v => W.accName = v); bind('#fAccNo', v => W.accNo = v);
+  bind('#fAccN', v => W.accName = v);
   bind('#fBudget', v => { W.budget = num(v); totals(); });
-  bind('#fSup', v => { const s = supplierOf(v); W.supplierId = v; W.supplierName = s ? s.name : ''; if (s) { W.bank = s.bank || ''; W.accName = s.accName || ''; W.accNo = s.accNo || ''; q('#fBank').value = W.bank; q('#fAccN').value = W.accName; q('#fAccNo').value = W.accNo; } });
+  bind('#fSup', v => { const s = supplierOf(v); W.supplierId = v; W.supplierName = s ? s.name : ''; if (s) { W.accName = s.accName || s.name; const a = acctsOf(s); W.accounts = a.length ? a.map(x => ({ id: uid(), bank: x.bank, accNo: x.accNo })) : [{ id: uid(), bank: '', accNo: '' }]; q('#fAccN').value = W.accName; acctEditor(q('#eAccts'), W.accounts, false); } });
   bind('#fBr', v => {
     W.brId = v; const b = brOf(v);
     if (b && !W.projectId) { W.projectId = b.projectId; q('#fPrj').value = projName(W); }
@@ -222,27 +223,26 @@ function suppliersPage() {
   const L = LIST.sup;
   const mk = () => {
     let rows = S.suppliers.slice().sort((a, b) => a.name.localeCompare(b.name)); const q = lc(L.q);
-    if (q) rows = rows.filter(s => lc([s.name, s.bank, s.accName, s.accNo].join(' ')).includes(q));
+    if (q) rows = rows.filter(s => lc([s.name, s.accName, acctsOf(s).map(a => a.bank + ' ' + a.accNo).join(' ')].join(' ')).includes(q));
     L.page = Math.min(L.page, Math.max(0, Math.ceil(rows.length / PAGE) - 1));
-    $('#sbody').innerHTML = uiSlice(rows, L.page, PAGE).map(s => `<tr><td><b>${esc(s.name)}</b></td><td>${bankBadge(s.bank)} ${esc(s.bank)}</td><td>${esc(s.accName)}</td><td>${esc(s.accNo)}</td><td>${s.active === false ? '<span class="pill off">inactive</span>' : '<span class="pill final">active</span>'}</td><td class="n"><button class="sm" data-e="${s.id}">Edit</button></td></tr>`).join('') || '<tr><td colspan="6" class="empty">No suppliers yet.</td></tr>';
+    $('#sbody').innerHTML = uiSlice(rows, L.page, PAGE).map(s => `<tr><td><b>${esc(s.name)}</b></td><td>${acctsOf(s).map(a => `<div class="acl">${bankBadge(a.bank)} ${esc(a.accNo)}</div>`).join('') || '<span class="muted">—</span>'}</td><td>${esc(s.accName || s.name)}</td><td>${s.active === false ? '<span class="pill off">inactive</span>' : '<span class="pill final">active</span>'}</td><td class="n"><button class="sm" data-e="${s.id}">Edit</button></td></tr>`).join('') || '<tr><td colspan="6" class="empty">No suppliers yet.</td></tr>';
     $('#spager').innerHTML = uiPager({ total: rows.length, page: L.page, size: PAGE, key: 'sup' });
     $('#sbody').querySelectorAll('[data-e]').forEach(b => b.onclick = () => edit(byId(S.suppliers, b.dataset.e)));
   };
-  const edit = s => { dialogBank(); return edit2(s); };
-  const edit2 = s => dialog(`<h3>${s ? 'Edit supplier' : 'Add supplier'}</h3>
+  const edit = s => { const accts = acctsOf(s || {}).map(a => ({ id: uid(), bank: a.bank, accNo: a.accNo })); if (!accts.length) accts.push({ id: uid(), bank: '', accNo: '' }); setTimeout(() => acctEditor(document.getElementById('sAccts'), accts, false), 0); return edit2(s, accts); };
+  const edit2 = (s, accts) => dialog(`<h3>${s ? 'Edit supplier' : 'Add supplier'}</h3>
     <div class="field"><label>Supplier name</label><input name="name" required value="${esc(s ? s.name : '')}"></div>
-    <div class="field"><label>Bank</label><div class="combo"><input name="bank" id="sBank" autocomplete="off" value="${esc(s ? s.bank : '')}" placeholder="Select or type a bank"></div></div>
-    <div class="field"><label>Account name</label><input name="accName" value="${esc(s ? s.accName : '')}"></div>
-    <div class="field"><label>Account number</label><input name="accNo" value="${esc(s ? s.accNo : '')}"></div>
+    <div class="field"><label>Account name</label><input name="accName" value="${esc(s ? (s.accName || s.name) : '')}" placeholder="Name on the bank account"></div>
+    <div class="field"><label>Bank accounts</label><div id="sAccts"></div></div>
     <label class="chk"><input type="checkbox" name="active" ${!s || s.active !== false ? 'checked' : ''}> Active</label>`,
     o => { const name = (o.name || '').trim(); if (!name) return toast('Name is required', 'error');
-      const v = { name, bank: (o.bank || '').trim(), accName: (o.accName || '').trim(), accNo: (o.accNo || '').trim(), active: !!o.active };
+      const v = { name, accName: (o.accName || '').trim() || name, accounts: accts.filter(a => (a.bank || '').trim() || (a.accNo || '').trim()).map(a => ({ id: a.id, bank: a.bank.trim(), accNo: a.accNo.trim() })), active: !!o.active, bank: '', accNo: '' };
       if (s) { Object.assign(s, v); logAct('Edited supplier ' + name); } else { S.suppliers.push(Object.assign({ id: uid() }, v)); logAct('Added supplier ' + name); }
       save(); suppliersPage(); toast(`“${name}” saved`); },
     s ? () => { S.suppliers = S.suppliers.filter(x => x.id !== s.id); logAct('Removed supplier ' + s.name); save(); suppliersPage(); toast('Supplier removed'); } : null);
   $('#view').innerHTML = `<div class="row"><div><h1>Suppliers</h1><p class="sub">Who you pay, with their bank details. Pick one on a purchase order and the details fill in.</p></div><span class="spacer"></span><button class="primary" id="addS">${ic('plus')} Add supplier</button></div>
   <div class="card"><div class="row lbar"><div class="srch">${FIND_ICON}<input id="sq" type="search" placeholder="Search suppliers…" value="${esc(L.q)}"></div></div>
-  <div class="tbl-wrap"><table><thead><tr><th>Supplier</th><th>Bank</th><th>Account name</th><th>Account number</th><th>Status</th><th></th></tr></thead><tbody id="sbody"></tbody></table></div><div id="spager"></div></div>`;
+  <div class="tbl-wrap"><table><thead><tr><th>Supplier</th><th>Bank accounts</th><th>Account name</th><th>Status</th><th></th></tr></thead><tbody id="sbody"></tbody></table></div><div id="spager"></div></div>`;
   $('#addS').onclick = () => edit(null);
   $('#sq').oninput = e => { L.q = e.target.value; L.page = 0; mk(); };
   uiPagerBind($('#spager'), (k, p) => { L.page = p; mk(); });
@@ -384,4 +384,22 @@ function comboBind(inp, getOpts, render) {
 
 const bankOptHtml = n => `<span class="bkrow">${bankBadge(n)}<span>${esc(n)}</span></span>`;
 
-function dialogBank() { setTimeout(() => { const i = document.getElementById('sBank'); if (i && !i.dataset.cb) { i.dataset.cb = 1; comboBind(i, () => BANKS.map(b => b.n), bankOptHtml); } }, 0); }
+
+/* editable list of bank accounts (bank dropdown + account number); mutates `list` in place */
+function acctEditor(box, list, dis) {
+  if (!box) return;
+  const paint = () => {
+    box.innerHTML = list.map(a => '<div class="acrow" data-i="' + a.id + '"><div class="combo"><input data-f="bank" autocomplete="off" placeholder="Select a bank" value="' + esc(a.bank) + '"' + (dis ? ' disabled' : '') + '></div><input data-f="accNo" placeholder="Account number" value="' + esc(a.accNo) + '"' + (dis ? ' disabled' : '') + '>' + (dis ? '' : '<button type="button" class="x" data-del title="Remove">×</button>') + '</div>').join('')
+      + (dis ? '' : '<button type="button" class="sm" data-add>' + ic('plus') + ' Add another bank</button>');
+    box.querySelectorAll('.acrow').forEach(r => {
+      const a = list.find(x => x.id === r.dataset.i);
+      r.querySelectorAll('[data-f]').forEach(i => i.addEventListener('input', () => { a[i.dataset.f] = i.value; }));
+      if (!dis) comboBind(r.querySelector('[data-f=bank]'), () => BANKS.map(b => b.n), bankOptHtml);
+      const del = r.querySelector('[data-del]');
+      if (del) del.onclick = () => { if (list.length > 1) list.splice(list.indexOf(a), 1); else { a.bank = ''; a.accNo = ''; } paint(); };
+    });
+    const ad = box.querySelector('[data-add]');
+    if (ad) ad.onclick = () => { list.push({ id: uid(), bank: '', accNo: '' }); paint(); const ins = box.querySelectorAll('.acrow'); ins[ins.length - 1].querySelector('input').focus(); };
+  };
+  paint();
+}

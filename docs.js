@@ -62,7 +62,7 @@ const nextLqNo = () => 'LQ#' + (S.lqs.reduce((m, l) => Math.max(m, parseInt(Stri
 function blankBr() { const d = today(); return { id: uid(), no: '', date: d, projectId: '', requestedBy: who(), items: [newItem()], status: 'draft', createdTs: Date.now() }; }
 function blankPo(br) {
   const d = today();
-  const po = { id: uid(), no: '', brId: br ? br.id : '', date: d, projectId: br ? br.projectId : '', supplierId: '', supplierName: '', bank: '', accName: '', accNo: '', requestedBy: br ? br.requestedBy : who(), items: br ? br.items.map(i => ({ id: uid(), desc: i.desc, qty: i.qty, price: i.price })) : [newItem()], status: 'draft', createdTs: Date.now() };
+  const po = { id: uid(), no: '', brId: br ? br.id : '', date: d, projectId: br ? br.projectId : '', supplierId: '', supplierName: '', accName: '', accounts: [{ id: uid(), bank: '', accNo: '' }], requestedBy: br ? br.requestedBy : who(), items: br ? br.items.map(i => ({ id: uid(), desc: i.desc, qty: i.qty, price: i.price })) : [newItem()], status: 'draft', createdTs: Date.now() };
   po.no = nextPoNo(po.projectId, d);
   return po;
 }
@@ -173,7 +173,8 @@ function applyScan(kind, W, d) {
   if (kind !== 'lq' && d.requestedBy) W.requestedBy = d.requestedBy;
   if (kind === 'po') {
     if (d.supplier) { const s = S.suppliers.find(x => lc(x.name) === lc(d.supplier) || lc(d.supplier).includes(lc(x.name)) || lc(x.name).includes(lc(d.supplier))); if (s) { W.supplierId = s.id; W.supplierName = s.name; } else { W.supplierId = ''; W.supplierName = d.supplier; } }
-    if (d.bank) W.bank = d.bank; if (d.accountName) W.accName = d.accountName; if (d.accountNumber) W.accNo = String(d.accountNumber);
+    if (d.accountName) W.accName = d.accountName;
+    if (d.bank || d.accountNumber) W.accounts = [{ id: uid(), bank: String(d.bank || ''), accNo: String(d.accountNumber || '') }];
   }
   const items = Array.isArray(d.items) ? d.items : [];
   if (kind === 'lq') { if (items.length) W.rows = items.map(i => ({ id: uid(), date: /^\d{4}-/.test(i.date || '') ? i.date : W.date, desc: String(i.description || ''), amount: num(i.price) * (num(i.qty) || 1) })); if (!W.brId && num(d.budget)) W.budget = num(d.budget); }
@@ -197,3 +198,9 @@ function bankBadge(name) {
   const b = bankOf(name), c = b ? b.c : '#6f6a62', t = b ? (BANK_ABBR[b.n] || (b.n.length <= 5 ? b.n : bankAbbr(b.n))) : bankAbbr(name);
   return `<i class="bk" style="background:${c}">${esc(t)}</i>`;
 }
+
+/* bank accounts of a supplier or PO: [{bank, accNo}] (older records had a single bank / accNo) */
+const acctsOf = o => {
+  const a = Array.isArray(o.accounts) ? o.accounts.filter(x => x.bank || x.accNo) : [];
+  return a.length ? a : (o.bank || o.accNo ? [{ id: 'old', bank: o.bank || '', accNo: o.accNo || '' }] : []);
+};

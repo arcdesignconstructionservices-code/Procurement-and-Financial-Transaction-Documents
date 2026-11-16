@@ -28,6 +28,9 @@ const SHEET_CSS = `
 .sheet .bank .r{display:flex;gap:12px;font-size:12px;line-height:1.7}
 .sheet .bank .r b{min-width:128px;color:#666;font-weight:700}
 .sheet .bank .r span{color:#222;font-weight:700}
+.sheet .bank .acs{display:flex;flex-direction:column;gap:5px}
+.sheet .bank .ac{display:flex;align-items:center;font-size:12.5px;font-weight:700;color:#222;letter-spacing:.3px}
+.sheet .bank .ac .bk{min-width:44px;text-align:center}
 .sheet .sig{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:34px;position:relative}
 .sheet .sig .lbl{font-size:13px}
 .sheet .sig .line{border-bottom:1px solid #444;min-height:26px;padding-top:6px;color:#222;font-size:12.5px;font-weight:700;text-transform:uppercase}
@@ -45,6 +48,12 @@ const LETTERHEAD = () => `<div class="lh"><img src="${location.origin}/logo_dark
 const padRows = (n, min, cols) => Array.from({ length: Math.max(0, min - n) }, () => `<tr>${'<td></td>'.repeat(cols)}</tr>`).join('');
 
 const signRow = (label, name, title, date) => `<div><div class="lbl">${label}</div><div class="line">${esc(name || '')}</div><div class="ttl">${esc(title || '')}</div></div><div><div class="lbl">Date</div><div class="line">${esc(fmtDate(date))}</div></div>`;
+
+const bankBlock = d => {
+  const a = acctsOf(d), name = d.accName || d.supplierName || (supplierOf(d.supplierId) || {}).name || '';
+  const rows = a.map(x => `<div class="ac">${bankBadge(x.bank)}<span>${esc(x.accNo)}</span></div>`).join('');
+  return `<div class="bank"><div class="r"><b>BANK DETAILS:</b></div><div class="r"><b>ACCOUNT NAME:</b><span>${esc(name)}</span></div><div class="r"><b>ACCOUNT NUMBER:</b><div class="acs">${rows}</div></div></div>`;
+};
 
 function sheetHtml(kind, d, forEmail) {
   const css = forEmail ? `<style>${SHEET_CSS}</style>` : '';
@@ -70,7 +79,7 @@ function sheetHtml(kind, d, forEmail) {
       <div class="pair"><div><div class="lbl">Project</div><div class="val">${esc(projName(d))}</div></div><div>${isPo ? `<div class="lbl">Payment To</div><div class="val">${esc(sup)}</div>` : `<div class="lbl">Requested By</div><div class="val">${esc(d.requestedBy)}</div>`}</div></div>
       <table><thead><tr><th style="width:9%">Item #</th><th>Description</th><th class="n" style="width:10%">Qty</th><th class="n" style="width:17%">Unit price</th><th class="n" style="width:17%">Total price</th></tr></thead><tbody>${rows}${padRows(items.length, 10, 5)}</tbody></table>
       <div class="tot"><span>TOTAL=</span><span>${fmt(total)}</span></div>
-      ${isPo ? `<div class="bank"><div class="r"><b>BANK DETAILS:</b><span>${bankBadge(d.bank)}${esc(d.bank)}</span></div><div class="r"><b>ACCOUNT NAME:</b><span>${esc(d.accName)}</span></div><div class="r"><b>ACCOUNT NUMBER:</b><span>${esc(d.accNo)}</span></div></div>` : ''}
+      ${isPo ? bankBlock(d) : ''}
       <div class="sig"><div><div class="lbl">Requested By:</div><div class="line">${esc(d.requestedBy)}</div></div><div><div class="lbl">Date</div><div class="line">${esc(fmtDate(d.date))}</div></div>
         ${!isPo && ['approved', 'liquidated'].includes(d.status) && d.approvedAt ? signRow('Approved By:', S.settings.approverName || d.approvedBy, S.settings.approverTitle || d.approvedTitle, d.approvedAt) : ''}
         ${isPo && d.status === 'released' ? signRow('Released By:', S.settings.releaserName || S.settings.approverName || d.releasedBy, S.settings.approverTitle || d.releasedTitle, d.releasedAt) : ''}

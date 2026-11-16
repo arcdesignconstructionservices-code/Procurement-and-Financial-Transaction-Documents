@@ -62,3 +62,9 @@ html.previewing .print-root{display:block;position:fixed;inset:0;z-index:50;over
 .bk{display:inline-block;color:#fff;font:800 10px/1 var(--font);font-style:normal;padding:4px 6px;border-radius:3px;letter-spacing:.3px;min-width:34px;text-align:center}
 .bkrow{display:flex;align-items:center;gap:10px}
 .combo-opt .bk{flex:none}
+
+.acrow{display:grid;grid-template-columns:minmax(150px,1fr) minmax(150px,1.2fr) 34px;gap:8px;margin-bottom:8px;align-items:center}
+.acrow input{width:100%}
+#eAccts .sm,#sAccts .sm{margin-top:2px}
+.acl{display:flex;align-items:center;gap:8px;margin:2px 0;font-variant-numeric:tabular-nums}
+@media (max-width:640px){.acrow{grid-template-columns:1fr 34px}.acrow .combo{grid-column:1/-1}}
