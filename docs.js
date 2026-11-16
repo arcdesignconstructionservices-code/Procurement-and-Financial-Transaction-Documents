@@ -185,47 +185,19 @@ function applyScan(kind, W, d) {
 /* ---------- banks (only banks that have a logo file in banks/; any other bank can still be typed and shows a colored text badge) ---------- */
 const BANKS = [
   ['BDO', '#0a4ba0'], ['BPI', '#b3161d'], ['Metrobank', '#0b2f6b'], ['GoTyme', '#0bb5c4'], ['Landbank', '#0a8a4a'], ['PNB', '#0c3b8f'],
-  ['Security Bank', '#1e9e55'], ['China Bank', '#b8141c'], ['EastWest', '#6a1b9a'], ['GCash', '#0a6cf0'], ['Maya', '#08a05b']
+  ['Security Bank', '#1e9e55'], ['UnionBank', '#f37021'], ['China Bank', '#b8141c'], ['EastWest', '#6a1b9a'], ['GCash', '#0a6cf0'], ['Maya', '#08a05b']
 ].map(([n, c]) => ({ n, c }));
 const BANK_ABBR = { Metrobank: 'MBTC', GoTyme: 'GT', Landbank: 'LBP', 'Security Bank': 'SBC', UnionBank: 'UBP', 'China Bank': 'CBC', EastWest: 'EWB', Maybank: 'MBB', 'Robinsons Bank': 'RBI', 'Sterling Bank': 'STER', Citibank: 'CITI', UnionDigital: 'UD', 'Standard Chartered': 'SC' };
 const bankOf = name => BANKS.find(b => lc(b.n) === lc(name));
 const bankAbbr = n => { const w = String(n || '').trim().split(/\s+/); return (w.length > 1 ? w.map(x => x[0]).join('') : String(n || '').slice(0, 4)).toUpperCase().slice(0, 4); };
 const bankSlug = n => String(n || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-const BANK_LOGOS = {}, BANK_TRIM = {};   // slug -> file name / cropped copy (data URL), filled from /api/bank-logos
-/* The logo files have empty margins; crop each one to its visible part so all logos print at a similar size. */
-function trimLogo(slug, url) {
-  const img = new Image();
-  img.onload = () => {
-    try {
-      const k = Math.min(1, 700 / Math.max(img.width, img.height)), w = Math.max(1, Math.round(img.width * k)), h = Math.max(1, Math.round(img.height * k));
-      const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0, w, h);
-      const px = x.getImageData(0, 0, w, h).data;
-      const at = (xx, yy) => { const o = (yy * w + xx) * 4; return [px[o], px[o + 1], px[o + 2], px[o + 3]]; };
-      const cs = [at(1, 1), at(w - 2, 1), at(1, h - 2), at(w - 2, h - 2)];
-      const clear = cs.filter(c => c[3] < 16).length >= 2;
-      const bg = clear ? [255, 255, 255] : [0, 1, 2].map(i => Math.round(cs.reduce((n, c) => n + c[i], 0) / 4));
-      const light = bg[0] > 225 && bg[1] > 225 && bg[2] > 225;
-      let x0 = w, y0 = h, x1 = -1, y1 = -1;
-      for (let y = 0; y < h; y++) for (let xx = 0; xx < w; xx++) {
-        const o = (y * w + xx) * 4; const al = px[o + 3] / 255;
-        const dd = Math.abs(px[o] * al + 255 * (1 - al) - bg[0]) + Math.abs(px[o + 1] * al + 255 * (1 - al) - bg[1]) + Math.abs(px[o + 2] * al + 255 * (1 - al) - bg[2]);
-        if (dd > 60) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-      }
-      if (x1 < 0) return;
-      const padX = Math.round(Math.max(2, (x1 - x0 + 1) * (light ? 0.02 : 0.16))), padY = Math.round(Math.max(2, (y1 - y0 + 1) * (light ? 0.02 : 0.32)));
-      x0 = Math.max(0, x0 - padX); y0 = Math.max(0, y0 - padY); x1 = Math.min(w - 1, x1 + padX); y1 = Math.min(h - 1, y1 + padY);
-      const o = document.createElement('canvas'); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1; o.getContext('2d').drawImage(c, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
-      BANK_TRIM[slug] = o.toDataURL('image/png');
-    } catch (e) { }
-  };
-  img.src = url;
-}
-fetch('/api/bank-logos', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).then(list => list.forEach(f => { const s = f.replace(/\.[^.]+$/, '').toLowerCase(); BANK_LOGOS[s] = f; trimLogo(s, '/banks/' + encodeURIComponent(f)); })).catch(() => { });
+const BANK_LOGOS = {};   // slug -> file name, filled from /api/bank-logos (the logo files are transparent PNGs, all the same 360x120 box)
+fetch('/api/bank-logos', { cache: 'no-store' }).then(r => r.ok ? r.json() : []).then(list => list.forEach(f => { const s = f.replace(/\.[^.]+$/, '').toLowerCase(); BANK_LOGOS[s] = f; })).catch(() => { });
 function bankBadge(name) {
   if (!String(name || '').trim()) return '';
   const b = bankOf(name), c = b ? b.c : '#6f6a62', t = b ? (BANK_ABBR[b.n] || (b.n.length <= 5 ? b.n : bankAbbr(b.n))) : bankAbbr(name);
   const logo = b && BANK_LOGOS[bankSlug(b.n)];
-  if (logo) { const src = (!window.BK_MAIL && BANK_TRIM[bankSlug(b.n)]) || (location.origin + '/banks/' + encodeURIComponent(logo)); return `<img class="bkl" src="${src}" alt="${esc(b.n)}">`; }
+  if (logo) { const src = location.origin + '/banks/' + encodeURIComponent(logo); return `<img class="bkl" src="${src}" alt="${esc(b.n)}">`; }
   return `<i class="bk" style="background:${c}">${esc(t)}</i>`;
 }
 

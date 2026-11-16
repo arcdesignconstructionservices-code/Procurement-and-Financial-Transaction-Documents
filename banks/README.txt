@@ -10,6 +10,6 @@ Name each file after the bank, lowercase, spaces become dashes. PNG, SVG, JPG or
   uniondigital.png   tonik.png   citibank.png   hsbc.png   standard-chartered.png
 
 The dropdown lists only banks that have a logo here (BDO, BPI, Metrobank, GoTyme, Landbank, PNB, Security Bank,
-China Bank, EastWest, GCash, Maya). To add a bank to the dropdown, add its logo file and its name to the BANKS list in docs.js.
-A bank typed by hand that is not in the list shows a plain colored text badge. Wide logos on a transparent or white
-background work best (about 200 x 60 px). Then commit and push, and Railway redeploys.
+UnionBank, China Bank, EastWest, GCash, Maya). The files here are transparent PNGs, all the same 360 x 120 box.
+To add a bank: add its logo file and its name to the BANKS list in docs.js. A bank typed by hand that is not in the list
+shows a plain colored text badge. The original logo files are kept in D:Howell FilesLogo Pictureank logos original.
