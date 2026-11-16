@@ -9,5 +9,7 @@ Name each file after the bank, lowercase, spaces become dashes. PNG, SVG, JPG or
   robinsons-bank.png   sterling-bank.png   gcash.png   maya.png   seabank.png
   uniondigital.png   tonik.png   citibank.png   hsbc.png   standard-chartered.png
 
-A bank with no file here keeps the colored badge. Wide logos on a transparent or white
+The dropdown lists only banks that have a logo here (BDO, BPI, Metrobank, GoTyme, Landbank, PNB, Security Bank,
+China Bank, EastWest, GCash, Maya). To add a bank to the dropdown, add its logo file and its name to the BANKS list in docs.js.
+A bank typed by hand that is not in the list shows a plain colored text badge. Wide logos on a transparent or white
 background work best (about 200 x 60 px). Then commit and push, and Railway redeploys.
