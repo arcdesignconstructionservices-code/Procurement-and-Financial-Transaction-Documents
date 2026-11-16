@@ -30,12 +30,13 @@ let S; // state
 /* ---------- Storage ---------- */
 function seed() {
   return { settings: { company: 'ARC', profileName: '', avatar: '', approverTitle: 'Vice President/CFO', approverName: '', releaserName: '', notifyEmails: '', autoEmail: false, autoDrafts: true, lqDays: 14 },
-    projects: [], suppliers: [], brs: [], pos: [], lqs: [], activity: [] };
+    people: [], projects: [], suppliers: [], brs: [], pos: [], lqs: [], activity: [] };
 }
 function normalize() {
   if (!S || typeof S !== 'object') S = seed();
   const d = seed(); S.settings = Object.assign(d.settings, S.settings || {});
-  ['projects', 'suppliers', 'brs', 'pos', 'lqs', 'activity'].forEach(k => { if (!Array.isArray(S[k])) S[k] = []; });
+  if (!S.settings.peopleSeeded) { S.settings.peopleSeeded = true; if (!S.people || !S.people.length) S.people = ['Remz Jenica Capale', 'Zyrine Capale'].map((name, i) => ({ id: 'seed-person-' + i, name, active: true })); }
+  ['people', 'projects', 'suppliers', 'brs', 'pos', 'lqs', 'activity'].forEach(k => { if (!Array.isArray(S[k])) S[k] = []; });
 }
 function load() { try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) { S = null; } normalize(); }
 function save() {
@@ -213,7 +214,7 @@ function animateCounts(scope) {
 function download(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); }
 
 /* ---------- Router ---------- */
-const routes = { dashboard, budget: budgetPage, orders: ordersPage, liquidations: lqPage, suppliers: suppliersPage, projects: projectsPage, activity: activityPage, settings };
+const routes = { dashboard, budget: budgetPage, orders: ordersPage, liquidations: lqPage, people: peoplePage, suppliers: suppliersPage, projects: projectsPage, activity: activityPage, settings };
 function render() {
   const r = (location.hash.slice(1) || 'dashboard').split('/')[0];
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('active', a.dataset.r === r));

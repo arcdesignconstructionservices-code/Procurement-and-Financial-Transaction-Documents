@@ -92,7 +92,7 @@ function editor(kind, orig, isNew) {
   const brChoices = S.brs.filter(b => ['approved', 'liquidated'].includes(b.status) || b.id === W.brId);
   const brOpts = `<option value="">${kind === 'lq' ? 'No budget request (enter budget by hand)' : 'Not linked'}</option>` + brChoices.map(b => `<option value="${b.id}"${W.brId === b.id ? ' selected' : ''}>${esc(b.no + ' · ' + projName(b) + ' · ' + peso(brTotal(b)))}</option>`).join('');
   const supOpts = `<option value="">Choose supplier…</option>` + S.suppliers.filter(s => s.active !== false || s.id === W.supplierId).map(s => `<option value="${s.id}"${W.supplierId === s.id ? ' selected' : ''}>${esc(s.name)}</option>`).join('');
-  const people = [...new Set(S.brs.concat(S.pos).map(d => d.requestedBy).concat([who()]).filter(Boolean))];
+  const people = [...new Set(S.people.filter(p => p.active !== false).map(p => p.name).concat(S.brs.concat(S.pos).map(d => d.requestedBy)).filter(Boolean))];
   const tbl = kind === 'lq'
     ? `<table class="ed"><thead><tr><th style="width:150px">Date</th><th>Description</th><th class="n" style="width:150px">Amount (₱)</th><th style="width:38px"></th></tr></thead><tbody id="eRows"></tbody></table>`
     : `<table class="ed"><thead><tr><th style="width:44px">#</th><th>Description</th><th class="n" style="width:84px">Qty</th><th class="n" style="width:140px">Unit price</th><th class="n" style="width:140px">Total price</th><th style="width:38px"></th></tr></thead><tbody id="eRows"></tbody></table>`;
@@ -123,7 +123,7 @@ function editor(kind, orig, isNew) {
     <div class="field"><label>Project</label><input id="fPrj" list="prjList" autocomplete="off" placeholder="Type a project, or pick a recent one" value="${esc(projName(W))}"${dis}><datalist id="prjList">${prjOpts}</datalist></div>
     ${kind === 'po' ? `<div class="field"><label>Payment to (supplier)</label><select id="fSup"${dis}>${supOpts}</select></div>
       <div class="field"><label>Bank</label><input id="fBank" value="${esc(W.bank)}"${dis}></div><div class="field"><label>Account name</label><input id="fAccN" value="${esc(W.accName)}"${dis}></div><div class="field"><label>Account number</label><input id="fAccNo" value="${esc(W.accNo)}"${dis}></div>` : ''}
-    ${kind !== 'lq' ? `<div class="field"><label>Requested by</label><input id="fReq" list="peopleList" value="${esc(W.requestedBy)}"${dis}><datalist id="peopleList">${people.map(p => `<option value="${esc(p)}">`).join('')}</datalist></div>` : `<div class="field"><label>Submitted by</label><input id="fSubBy" value="${esc(W.submittedBy)}"${dis}></div><div class="field"><label>Submitted on</label><input type="date" id="fSubOn" value="${esc(W.submittedDate)}"${dis}></div>`}
+    ${kind !== 'lq' ? `<div class="field"><label>Requested by</label><div class="row" style="flex-wrap:nowrap;gap:6px"><input id="fReq" list="peopleList" autocomplete="off" placeholder="Pick or type a name" value="${esc(W.requestedBy)}"${dis} style="flex:1;min-width:0">${locked ? '' : '<button type="button" class="sm" id="addPerson" title="Add a person to the list">+ Add</button>'}</div><datalist id="peopleList">${people.map(p => `<option value="${esc(p)}">`).join('')}</datalist></div>` : `<div class="field"><label>Submitted by</label><input id="fSubBy" value="${esc(W.submittedBy)}"${dis}></div><div class="field"><label>Submitted on</label><input type="date" id="fSubOn" value="${esc(W.submittedDate)}"${dis}></div>`}
     ${kind === 'lq' && !W.brId ? `<div class="field"><label>Budget (₱)</label><input type="number" step="0.01" id="fBudget" value="${esc(W.budget)}"${dis}></div>` : ''}
   </div>
   ${tbl}${locked ? '' : `<div class="row" style="margin-top:8px"><button class="sm" id="addRow">${ic('plus')} Add ${kind === 'lq' ? 'expense' : 'item'}</button></div>`}
@@ -166,6 +166,7 @@ function editor(kind, orig, isNew) {
     W.projectId = p.id; delete W.projectName; pj.value = p.name; renum();
   };
   bind('#fReq', v => W.requestedBy = v);
+  const apb = q('#addPerson'); if (apb) apb.onclick = () => personDialog(null, p => { W.requestedBy = p.name; q('#fReq').value = p.name; const dl = q('#peopleList'); if (dl) dl.insertAdjacentHTML('beforeend', '<option value="' + esc(p.name) + '">'); });
   bind('#fSubBy', v => W.submittedBy = v); bind('#fSubOn', v => W.submittedDate = v);
   bind('#fBank', v => W.bank = v); bind('#fAccN', v => W.accName = v); bind('#fAccNo', v => W.accNo = v);
   bind('#fBudget', v => { W.budget = num(v); totals(); });
@@ -334,4 +335,25 @@ function settings() {
   $('#profClear').onclick = () => { pendPic = ''; paintPrev(); };
   $('#profSave').onclick = () => { S.settings.profileName = $('#profName').value.trim() || 'Temporary Profile'; S.settings.avatar = pendPic || ''; save(); applyProfile(); toast('Profile saved'); };
   $('#reset').onclick = () => { if (prompt('Type RESET to erase all data') === 'RESET') { localStorage.removeItem(KEY); load(); save(); render(); applyProfile(); toast('Data reset'); } };
+}
+
+/* ---------- People (names offered under "Requested by") ---------- */
+function personDialog(p, done) {
+  dialog(`<h3>${p ? 'Edit person' : 'Add person'}</h3>
+    <div class="field"><label>Full name</label><input name="name" required value="${esc(p ? p.name : '')}"></div>
+    <label class="chk"><input type="checkbox" name="active" ${!p || p.active !== false ? 'checked' : ''}> Active</label>`,
+    o => { const name = (o.name || '').trim(); if (!name) return toast('Name is required', 'error');
+      if (S.people.some(x => x !== p && lc(x.name) === lc(name))) return toast('That name is already in the list', 'error');
+      if (p) { const old = p.name; Object.assign(p, { name, active: !!o.active }); logAct('Edited person ' + old + (old !== name ? ' → ' + name : '')); }
+      else { p = { id: uid(), name, active: !!o.active }; S.people.push(p); logAct('Added person ' + name); }
+      save(); toast(`“${name}” saved`); if (done) done(p); },
+    p && done === peoplePage ? () => { S.people = S.people.filter(x => x.id !== p.id); logAct('Removed person ' + p.name); save(); peoplePage(); toast('Person removed'); } : null);
+}
+function peoplePage() {
+  const list = S.people.slice().sort((a, b) => ((b.active !== false) - (a.active !== false)) || a.name.localeCompare(b.name));
+  const rows = list.map(p => `<tr><td><b>${esc(p.name)}</b></td><td>${p.active === false ? '<span class="pill off">inactive</span>' : '<span class="pill final">active</span>'}</td><td class="n"><button class="sm" data-e="${p.id}">Edit</button></td></tr>`).join('');
+  $('#view').innerHTML = `<div class="row"><div><h1>People</h1><p class="sub">The names offered under “Requested by”. Add anyone who requests budget or orders.</p></div><span class="spacer"></span><button class="primary" id="addP">${ic('plus')} Add person</button></div>
+  <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Status</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="3" class="empty">No people yet.</td></tr>'}</tbody></table></div></div>`;
+  $('#addP').onclick = () => personDialog(null, peoplePage);
+  $('#view').querySelectorAll('[data-e]').forEach(b => b.onclick = () => personDialog(byId(S.people, b.dataset.e), peoplePage));
 }
