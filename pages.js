@@ -86,7 +86,9 @@ function editor(kind, orig, isNew) {
   const K = KINDS[kind], W = clone(orig), locked = !isNew && W.status !== 'draft';
   let noEdited = !isNew;
   const dis = locked ? ' disabled' : '';
-  const prjOpts = `<option value="">Choose project…</option>` + S.projects.filter(p => p.active !== false || p.id === W.projectId).map(p => `<option value="${p.id}"${W.projectId === p.id ? ' selected' : ''}>${esc(p.code + ' · ' + p.name)}</option>`).join('');
+  const lastUse = {}; S.brs.concat(S.pos, S.lqs).forEach(d => { if (d.projectId) lastUse[d.projectId] = Math.max(lastUse[d.projectId] || 0, d.createdTs || 0); });
+  const prjList = S.projects.filter(p => p.active !== false || p.id === W.projectId).sort((a, b) => (lastUse[b.id] || 0) - (lastUse[a.id] || 0));
+  const prjOpts = prjList.map(p => `<option value="${esc(p.name)}">`).join('');
   const brChoices = S.brs.filter(b => ['approved', 'liquidated'].includes(b.status) || b.id === W.brId);
   const brOpts = `<option value="">${kind === 'lq' ? 'No budget request (enter budget by hand)' : 'Not linked'}</option>` + brChoices.map(b => `<option value="${b.id}"${W.brId === b.id ? ' selected' : ''}>${esc(b.no + ' · ' + projName(b) + ' · ' + peso(brTotal(b)))}</option>`).join('');
   const supOpts = `<option value="">Choose supplier…</option>` + S.suppliers.filter(s => s.active !== false || s.id === W.supplierId).map(s => `<option value="${s.id}"${W.supplierId === s.id ? ' selected' : ''}>${esc(s.name)}</option>`).join('');
@@ -118,7 +120,7 @@ function editor(kind, orig, isNew) {
     <div class="field"><label>Date</label><input type="date" id="fDate" value="${esc(W.date)}"${dis}></div>
     <div class="field"><label>${kind === 'br' ? 'Budget Request #' : kind === 'po' ? 'PO #' : 'Liquidation #'}</label><input id="fNo" value="${esc(W.no)}"${dis}></div>
     ${kind !== 'br' ? `<div class="field"><label>${kind === 'po' ? 'For budget request' : 'Budget request'}</label><select id="fBr"${dis}>${brOpts}</select></div>` : ''}
-    <div class="field"><label>Project</label><select id="fPrj"${dis}>${prjOpts}</select></div>
+    <div class="field"><label>Project</label><input id="fPrj" list="prjList" autocomplete="off" placeholder="Type a project, or pick a recent one" value="${esc(projName(W))}"${dis}><datalist id="prjList">${prjOpts}</datalist></div>
     ${kind === 'po' ? `<div class="field"><label>Payment to (supplier)</label><select id="fSup"${dis}>${supOpts}</select></div>
       <div class="field"><label>Bank</label><input id="fBank" value="${esc(W.bank)}"${dis}></div><div class="field"><label>Account name</label><input id="fAccN" value="${esc(W.accName)}"${dis}></div><div class="field"><label>Account number</label><input id="fAccNo" value="${esc(W.accNo)}"${dis}></div>` : ''}
     ${kind !== 'lq' ? `<div class="field"><label>Requested by</label><input id="fReq" list="peopleList" value="${esc(W.requestedBy)}"${dis}><datalist id="peopleList">${people.map(p => `<option value="${esc(p)}">`).join('')}</datalist></div>` : `<div class="field"><label>Submitted by</label><input id="fSubBy" value="${esc(W.submittedBy)}"${dis}></div><div class="field"><label>Submitted on</label><input type="date" id="fSubOn" value="${esc(W.submittedDate)}"${dis}></div>`}
@@ -155,7 +157,14 @@ function editor(kind, orig, isNew) {
   const bind = (sel, fn) => { const e = q(sel); if (e) e.oninput = e.onchange = () => fn(e.value, e); };
   bind('#fDate', v => { W.date = v; renum(); });
   bind('#fNo', v => { W.no = v; noEdited = true; });
-  bind('#fPrj', v => { W.projectId = v; delete W.projectName; renum(); });
+  const pj = q('#fPrj');
+  if (pj) pj.onchange = () => {
+    const name = pj.value.trim();
+    if (!name) { W.projectId = ''; delete W.projectName; renum(); return; }
+    let p = S.projects.find(x => lc(x.name) === lc(name));
+    if (!p) { p = { id: uid(), code: nextProjectCode(), name, active: true }; S.projects.push(p); logAct('Added project ' + name); save(); toast('New project “' + name + '” added (code ' + p.code + ')'); }
+    W.projectId = p.id; delete W.projectName; pj.value = p.name; renum();
+  };
   bind('#fReq', v => W.requestedBy = v);
   bind('#fSubBy', v => W.submittedBy = v); bind('#fSubOn', v => W.submittedDate = v);
   bind('#fBank', v => W.bank = v); bind('#fAccN', v => W.accName = v); bind('#fAccNo', v => W.accNo = v);
@@ -163,10 +172,10 @@ function editor(kind, orig, isNew) {
   bind('#fSup', v => { const s = supplierOf(v); W.supplierId = v; W.supplierName = s ? s.name : ''; if (s) { W.bank = s.bank || ''; W.accName = s.accName || ''; W.accNo = s.accNo || ''; q('#fBank').value = W.bank; q('#fAccN').value = W.accName; q('#fAccNo').value = W.accNo; } });
   bind('#fBr', v => {
     W.brId = v; const b = brOf(v);
-    if (b && !W.projectId) { W.projectId = b.projectId; q('#fPrj').value = W.projectId; }
+    if (b && !W.projectId) { W.projectId = b.projectId; q('#fPrj').value = projName(W); }
     if (b && kind === 'po' && W.items.length === 1 && !W.items[0].desc && !num(W.items[0].price)) { W.items = clone(b.items).map(i => ({ id: uid(), desc: i.desc, qty: i.qty, price: i.price })); paintRows(); }
     if (b && kind === 'po' && !W.requestedBy) { W.requestedBy = b.requestedBy; q('#fReq').value = W.requestedBy; }
-    if (kind === 'po') { if (b) { W.projectId = b.projectId; q('#fPrj').value = W.projectId; } renum(); }
+    if (kind === 'po') { if (b) { W.projectId = b.projectId; q('#fPrj').value = projName(W); } renum(); }
     if (kind === 'lq') { if (b) W.budget = brTotal(b); editor(kind, W, isNew); }
   });
 
