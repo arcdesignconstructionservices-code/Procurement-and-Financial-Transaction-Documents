@@ -37,6 +37,7 @@ function normalize() {
   const d = seed(); S.settings = Object.assign(d.settings, S.settings || {});
   if (!S.settings.peopleSeeded) { S.settings.peopleSeeded = true; if (!S.people || !S.people.length) S.people = ['Remz Jenica Capale', 'Zyrine Capale'].map((name, i) => ({ id: 'seed-person-' + i, name, active: true })); }
   ['people', 'projects', 'suppliers', 'brs', 'pos', 'lqs', 'activity'].forEach(k => { if (!Array.isArray(S[k])) S[k] = []; });
+  if (!S.settings.arjaySeeded) { S.settings.arjaySeeded = true; if (!S.people.some(p => /arjay ralph casanova/i.test(p.name))) S.people.push({ id: 'seed-person-2', name: 'Arjay Ralph Casanova', active: true }); }
 }
 function load() { try { S = JSON.parse(localStorage.getItem(KEY)); } catch (e) { S = null; } normalize(); }
 function save() {
@@ -136,6 +137,14 @@ async function cloudPull() {
 }
 setInterval(cloudPull, 20000);
 addEventListener('focus', cloudPull);
+/* Leaving the page (refresh, close) with a save still waiting: send it now so the last edit is never lost.
+   If it does not get through, it stays in localStorage and is merged in on the next start. */
+function flushOnLeave() {
+  if (DATA_MODE !== 'cloud' || !_syncT) return;
+  try { const body = JSON.stringify({ data: S, baseVersion: SYNC.ver }); if (body.length < 60000) fetch('/api/state', { method: 'PUT', keepalive: true, headers: { 'Content-Type': 'application/json' }, body }); } catch (e) { }
+}
+addEventListener('pagehide', flushOnLeave);
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushOnLeave(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) cloudPull(); });
 let ARC_WHO = '';
 /* the signed-in person's name (from the Gateway / sign-in) fills the profile until a name is set by hand */

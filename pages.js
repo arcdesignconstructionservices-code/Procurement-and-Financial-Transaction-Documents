@@ -88,7 +88,6 @@ function editor(kind, orig, isNew) {
   const dis = locked ? ' disabled' : '';
   const lastUse = {}; S.brs.concat(S.pos, S.lqs).forEach(d => { if (d.projectId) lastUse[d.projectId] = Math.max(lastUse[d.projectId] || 0, d.createdTs || 0); });
   const prjList = S.projects.filter(p => p.active !== false || p.id === W.projectId).sort((a, b) => (lastUse[b.id] || 0) - (lastUse[a.id] || 0));
-  const prjOpts = prjList.map(p => `<option value="${esc(p.name)}">`).join('');
   const brChoices = S.brs.filter(b => ['approved', 'liquidated'].includes(b.status) || b.id === W.brId);
   const brOpts = `<option value="">${kind === 'lq' ? 'No budget request (enter budget by hand)' : 'Not linked'}</option>` + brChoices.map(b => `<option value="${b.id}"${W.brId === b.id ? ' selected' : ''}>${esc(b.no + ' · ' + projName(b) + ' · ' + peso(brTotal(b)))}</option>`).join('');
   const supOpts = `<option value="">Choose supplier…</option>` + S.suppliers.filter(s => s.active !== false || s.id === W.supplierId).map(s => `<option value="${s.id}"${W.supplierId === s.id ? ' selected' : ''}>${esc(s.name)}</option>`).join('');
@@ -120,10 +119,10 @@ function editor(kind, orig, isNew) {
     <div class="field"><label>Date</label><input type="date" id="fDate" value="${esc(W.date)}"${dis}></div>
     <div class="field"><label>${kind === 'br' ? 'Budget Request #' : kind === 'po' ? 'PO #' : 'Liquidation #'}</label><input id="fNo" value="${esc(W.no)}"${dis}></div>
     ${kind !== 'br' ? `<div class="field"><label>${kind === 'po' ? 'For budget request' : 'Budget request'}</label><select id="fBr"${dis}>${brOpts}</select></div>` : ''}
-    <div class="field"><label>Project</label><input id="fPrj" list="prjList" autocomplete="off" placeholder="Type a project, or pick a recent one" value="${esc(projName(W))}"${dis}><datalist id="prjList">${prjOpts}</datalist></div>
+    <div class="field"><label>Project</label><div class="combo"><input id="fPrj" autocomplete="off" placeholder="Select or type a project" value="${esc(projName(W))}"${dis}></div></div>
     ${kind === 'po' ? `<div class="field"><label>Payment to (supplier)</label><select id="fSup"${dis}>${supOpts}</select></div>
       <div class="field"><label>Bank</label><input id="fBank" value="${esc(W.bank)}"${dis}></div><div class="field"><label>Account name</label><input id="fAccN" value="${esc(W.accName)}"${dis}></div><div class="field"><label>Account number</label><input id="fAccNo" value="${esc(W.accNo)}"${dis}></div>` : ''}
-    ${kind !== 'lq' ? `<div class="field"><label>Requested by</label><div class="row" style="flex-wrap:nowrap;gap:6px"><input id="fReq" list="peopleList" autocomplete="off" placeholder="Pick or type a name" value="${esc(W.requestedBy)}"${dis} style="flex:1;min-width:0">${locked ? '' : '<button type="button" class="sm" id="addPerson" title="Add a person to the list">+ Add</button>'}</div><datalist id="peopleList">${people.map(p => `<option value="${esc(p)}">`).join('')}</datalist></div>` : `<div class="field"><label>Submitted by</label><input id="fSubBy" value="${esc(W.submittedBy)}"${dis}></div><div class="field"><label>Submitted on</label><input type="date" id="fSubOn" value="${esc(W.submittedDate)}"${dis}></div>`}
+    ${kind !== 'lq' ? `<div class="field"><label>Requested by</label><div class="row" style="flex-wrap:nowrap;gap:6px"><div class="combo" style="flex:1;min-width:0"><input id="fReq" autocomplete="off" placeholder="Select or type a name" value="${esc(W.requestedBy)}"${dis}></div>${locked ? '' : '<button type="button" class="sm" id="addPerson" title="Add a person to the list">+ Add</button>'}</div></div>` : `<div class="field"><label>Submitted by</label><input id="fSubBy" value="${esc(W.submittedBy)}"${dis}></div><div class="field"><label>Submitted on</label><input type="date" id="fSubOn" value="${esc(W.submittedDate)}"${dis}></div>`}
     ${kind === 'lq' && !W.brId ? `<div class="field"><label>Budget (₱)</label><input type="number" step="0.01" id="fBudget" value="${esc(W.budget)}"${dis}></div>` : ''}
   </div>
   ${tbl}${locked ? '' : `<div class="row" style="margin-top:8px"><button class="sm" id="addRow">${ic('plus')} Add ${kind === 'lq' ? 'expense' : 'item'}</button></div>`}
@@ -157,6 +156,7 @@ function editor(kind, orig, isNew) {
   const bind = (sel, fn) => { const e = q(sel); if (e) e.oninput = e.onchange = () => fn(e.value, e); };
   bind('#fDate', v => { W.date = v; renum(); });
   bind('#fNo', v => { W.no = v; noEdited = true; });
+  if (!locked) { comboBind(q('#fPrj'), () => prjList.map(p => p.name)); if (q('#fReq')) comboBind(q('#fReq'), () => people); }
   const pj = q('#fPrj');
   if (pj) pj.onchange = () => {
     const name = pj.value.trim();
@@ -166,7 +166,7 @@ function editor(kind, orig, isNew) {
     W.projectId = p.id; delete W.projectName; pj.value = p.name; renum();
   };
   bind('#fReq', v => W.requestedBy = v);
-  const apb = q('#addPerson'); if (apb) apb.onclick = () => personDialog(null, p => { W.requestedBy = p.name; q('#fReq').value = p.name; const dl = q('#peopleList'); if (dl) dl.insertAdjacentHTML('beforeend', '<option value="' + esc(p.name) + '">'); });
+  const apb = q('#addPerson'); if (apb) apb.onclick = () => personDialog(null, p => { W.requestedBy = p.name; q('#fReq').value = p.name; people.push(p.name); });
   bind('#fSubBy', v => W.submittedBy = v); bind('#fSubOn', v => W.submittedDate = v);
   bind('#fBank', v => W.bank = v); bind('#fAccN', v => W.accName = v); bind('#fAccNo', v => W.accNo = v);
   bind('#fBudget', v => { W.budget = num(v); totals(); });
@@ -356,4 +356,26 @@ function peoplePage() {
   <div class="card"><div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Status</th><th></th></tr></thead><tbody>${rows || '<tr><td colspan="3" class="empty">No people yet.</td></tr>'}</tbody></table></div></div>`;
   $('#addP').onclick = () => personDialog(null, peoplePage);
   $('#view').querySelectorAll('[data-e]').forEach(b => b.onclick = () => personDialog(byId(S.people, b.dataset.e), peoplePage));
+}
+
+/* ---------- dropdown for text boxes (themed replacement for the browser's datalist) ---------- */
+function comboBind(inp, getOpts) {
+  if (!inp) return;
+  const wrap = inp.parentElement, box = document.createElement('div');
+  box.className = 'combo-list'; wrap.appendChild(box);
+  const hide = () => box.classList.remove('open');
+  const show = () => {
+    const all = getOpts(), v = lc(inp.value), exact = all.some(o => lc(o) === v);
+    const list = all.filter(o => exact || !v || lc(o).includes(v));
+    box.innerHTML = list.map(o => `<button type="button" class="combo-opt${lc(o) === v ? ' on' : ''}">${esc(o)}</button>`).join('');
+    box.classList.toggle('open', list.length > 0);
+  };
+  inp.addEventListener('focus', show); inp.addEventListener('click', show); inp.addEventListener('input', show);
+  inp.addEventListener('blur', () => setTimeout(hide, 120));
+  inp.addEventListener('keydown', e => { if (e.key === 'Escape') hide(); });
+  box.addEventListener('mousedown', e => {
+    const b = e.target.closest('.combo-opt'); if (!b) return;
+    e.preventDefault(); inp.value = b.textContent;
+    inp.dispatchEvent(new Event('input', { bubbles: true })); inp.dispatchEvent(new Event('change', { bubbles: true })); hide();
+  });
 }
