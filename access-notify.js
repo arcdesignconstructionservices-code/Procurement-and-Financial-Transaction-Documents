@@ -4,6 +4,12 @@
    New requests arrive live (Server-Sent Events relayed by this app's server) and appear as items in the
    notification dropdown with Approve / Deny buttons. The host page calls arcAccess.notifs() from
    computeNotifs() and renders the buttons itself (see renderNotifs). */
+/* Profile avatar: the ARC+ logo instead of the person icon (a picture the user uploads still wins) */
+(function () {
+  var st = document.createElement('style');
+  st.textContent = '#profile .avatar:not(.haspic){background:#0a0a0a url(/logo.png) center/62% no-repeat!important}#profile .avatar:not(.haspic)>svg{display:none}';
+  document.head.appendChild(st);
+})();
 /* "View SOP" button above Sign out: opens this app's Standard Operating Procedure (sop.pdf) in a new tab */
 (function () {
   var st = document.createElement('style');
