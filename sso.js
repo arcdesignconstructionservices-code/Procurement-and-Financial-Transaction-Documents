@@ -327,7 +327,7 @@ function ssoGate(app, { toolId, title }) {
     if (!p || p.t !== toolId) return res.redirect('/login');
     setCookie(req, res, COOKIE, sign({ sub: p.sub, name: p.name, t: toolId, ap: !!p.ap, exp: Date.now() + MAX_MS }, secret), MAX_MS);
     report('gateway.link_entry', { actor: p.name, email: p.sub, ip: req.ip, detail: p.ap ? 'approver opened the app from the Gateway' : 'opened from the Gateway' });
-    res.redirect('/');
+    res.redirect('/?intro=1');   // the app plays its welcome animation when it is opened from the Gateway
   });
   // sign out
   app.get('/sso/logout', (req, res) => { setCookie(req, res, COOKIE, '', 0); res.redirect(on ? '/login' : '/'); });

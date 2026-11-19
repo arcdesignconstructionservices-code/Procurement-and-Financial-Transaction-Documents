@@ -25,6 +25,8 @@
 })();
 (function () {
   /* entrance animation: after signing in or being approved, the app slides and fades in */
+  /* opened from the Gateway (/?intro=1): play the welcome animation, then tidy the address */
+  try { if (/(^|[?&])intro=1(&|$)/.test(location.search)) { sessionStorage.setItem('arc-just-signed', '1'); history.replaceState(null, '', location.pathname + location.hash); } } catch (e) { }
   try {
     if (sessionStorage.getItem('arc-just-signed')) {
       sessionStorage.removeItem('arc-just-signed');
@@ -47,7 +49,7 @@
         var ov = document.createElement('div'); ov.id = 'arcWelcome'; ov.setAttribute('aria-hidden', 'true');
         ov.innerHTML = '<div class="aw"><div class="aw-logo"><img src="/logo_dark.png" alt=""></div><h1>Welcome<span id="awName"></span></h1><p>Getting your workspace ready</p><i class="aw-bar"><b></b></i></div>';
         document.documentElement.appendChild(ov);
-        try { fetch('/access/me', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { var n = j && j.name && String(j.name).split(' ')[0]; var el = document.getElementById('awName'); if (n && el) el.textContent = ', ' + n; }).catch(function () { }); } catch (e) { }
+        try { fetch('/access/me', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) { var n = j && j.name && !/^super admin$/i.test(String(j.name)) && String(j.name).split(' ')[0]; var el = document.getElementById('awName'); if (n && el) el.textContent = ', ' + n; }).catch(function () { }); } catch (e) { }
         setTimeout(function () { var o = document.getElementById('arcWelcome'); if (o) o.remove(); }, 2500);        setTimeout(function () { document.documentElement.classList.remove('arc-enter'); }, 2600);
       }
     }
