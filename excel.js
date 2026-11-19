@@ -66,7 +66,7 @@ async function buildXlsx(kind, d) {
     cell('G' + (tr + 1), { formula: `G${tr}-F13`, result: lqDeficit(d) }, { font: xlFont(13, XL.blue, true), fmt: XL_NUM });
     const sr = tr + 3;
     cell('B' + sr, 'Submitted By:', { font: xlFont(12, XL.blue, true) }); merge(`B${sr}:D${sr}`);
-    cell('F' + sr, 'Date', { font: xlFont(12, XL.blue, true) }); merge(`F${sr}:G${sr}`);
+    cell('F' + sr, 'Date received', { font: xlFont(12, XL.blue, true) }); merge(`F${sr}:G${sr}`);
     cell('B' + (sr + 1), d.submittedBy, { font: xlFont(12, 'FF222222', true), border: bottom }); merge(`B${sr + 1}:D${sr + 1}`);
     cell('F' + (sr + 1), xlDate(d.submittedDate), { font: xlFont(12, 'FF222222', true), fmt: 'M/d/yyyy', border: bottom, al: { horizontal: 'left' } }); merge(`F${sr + 1}:G${sr + 1}`);
     return wb.xlsx.writeBuffer();

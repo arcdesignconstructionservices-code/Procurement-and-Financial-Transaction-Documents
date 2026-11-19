@@ -69,7 +69,7 @@ function sheetHtml(kind, d, forEmail) {
       <table><thead><tr><th style="width:22%">Date</th><th>Description</th><th class="n" style="width:24%">Amount</th></tr></thead><tbody>${rows}${padRows((d.rows || []).length, 12, 3)}</tbody></table>
       <div class="tot"><span>TOTAL</span><span>${fmt(spent)}</span></div>
       <div class="tot sm def"><span>DEFICIT</span><span>${def < 0 ? '(' + fmt(-def) + ')' : fmt(def)}</span></div>
-      <div class="sig"><div><div class="lbl">Submitted By:</div><div class="line">${esc(d.submittedBy)}</div></div><div><div class="lbl">Date</div><div class="line">${esc(fmtDate(d.submittedDate))}</div></div></div>`;
+      <div class="sig"><div><div class="lbl">Submitted By:</div><div class="line">${esc(d.submittedBy)}</div></div><div><div class="lbl">Date received</div><div class="line">${esc(fmtDate(d.submittedDate))}</div></div></div>`;
   } else {
     const isPo = kind === 'po', items = d.items || [];
     const rows = items.map((i, k) => `<tr><td>${k + 1}</td><td>${esc(i.desc)}</td><td class="n">${fmt(i.qty)}</td><td class="n">${fmt(i.price)}</td><td class="n">${fmt(lineTotal(i))}</td></tr>`).join('');

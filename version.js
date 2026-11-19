@@ -5,8 +5,10 @@
      2. set APP_VERSION to the same version (and package.json "version")
    Entry shape:  { v, date, title, new:[...], improved:[...], fixed:[...] }
    ============================================================ */
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const APP_CHANGELOG = [
+  { v: '1.1.0', date: '2026-11-19', title: 'Liquidation: Date received',
+    improved: ['On a Liquidation the date under Submitted By is now called Date received, on screen, in the print and in the Excel file.', 'The profile circle shows the ARC+ logo, and opening the app from the Gateway plays the welcome animation.'] },
   { v: '1.0.0', date: '2026-11-16', title: 'ARC+ Procurement & Finance',
     new: ['Budget Requests, Purchase Orders and Liquidations, auto-numbered and linked.', 'Print to A4 / PDF and Excel export that match the paper forms.', 'Approving a budget request creates the PO and Liquidation drafts for you.', 'Alerts in the bell, optional email, and photo reading of paper forms.'] }
 ];
